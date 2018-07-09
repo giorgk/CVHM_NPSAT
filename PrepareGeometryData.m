@@ -1,4 +1,4 @@
-%% ============ MESH FILE based on CVHM grid ==================
+%% =================== MESH FILE based on CVHM grid =======================
 % From the complete CVHM database
 % https://ca.water.usgs.gov/projects/central-valley/cvhm-database.html
 % extract and load the BAS file 
@@ -54,25 +54,14 @@ for ii = 1:size(bas,1)
 end
 %% write mesh file
 writeMeshfile('CVHM_mesh.npsat', msh_nd, msh_el);
-%% ============ BOTTOM FILE based on CVHM grid ==================
-% load data
-[ BOT, info ] = readArcGisASCIIfile( 'gis_data/PP1766_DIS_Layer10_Bot_ASCII.txt' );
-% remove data outside grid
-BOT(BOT == BOT(1,1)) = nan;
-%%
-Xgrid = info.xllcorner+info.cellsize/2:...
-        info.cellsize:...
-        info.xllcorner+info.cellsize/2+info.cellsize*(info.ncols-1);
-    
-Ygrid = info.yllcorner+info.cellsize/2:...
-        info.cellsize:...
-        info.yllcorner+info.cellsize/2+info.cellsize*(info.nrows-1);
-%%
-% find cells with elevation information
-[II, JJ] = find(BOT ~= 0 & ~isnan(BOT));
+%}
+%% ================ ELEVATION DATA based on CVHM grid =====================
+% CVHM is divided into 10 layers therefore there are 11 2D grids. However
+% the top elevation that descibes the surface is not used because the top
+% elevation is set equal to the average hydraulic head.
 %% expand the nodes by a mile
 buff = shaperead('gis_data/CVHM_Mesh_outline_buffer');
-%% make unique list of buffer outline points
+% make unique list of buffer outline points
 buff_pnt = [buff(1,1).X(1) buff(1,1).Y(1)];
 for ii = 1:length(buff(1,1).X) - 1
     dst = sqrt((buff_pnt(:,1) - buff(1,1).X(ii)).^2 + (buff_pnt(:,2) - buff(1,1).Y(ii)).^2);
@@ -80,23 +69,147 @@ for ii = 1:length(buff(1,1).X) - 1
         buff_pnt = [buff_pnt; buff(1,1).X(ii) buff(1,1).Y(ii)];
     end
 end
-%% Interpolate from the BOT raster the buffer points
-Fbot = scatteredInterpolant(Xgrid(JJ)', Ygrid(II)', ...
-    BOT(sub2ind(size(BOT),II,JJ)));
-Fbot.Method = 'nearest';
-Fbot.ExtrapolationMethod = 'nearest';
-buff_pnt_Z = Fbot(buff_pnt(:,1), buff_pnt(:,2));
-%% write Bottom elevation file
-BOTALL = [Xgrid(JJ)', Ygrid(II)', ...
-    BOT(sub2ind(size(BOT),II,JJ));...
-    buff_pnt buff_pnt_Z];
-fid = fopen('CVHM_Bot_elev.npsat','w');
-fprintf(fid, 'SCATTERED\n');
-fprintf(fid, 'HOR\n');
-fprintf(fid, 'SIMPLE\n');
-fprintf(fid, '%d %d\n', [size(BOTALL,1) 1]);
-fprintf(fid, '%f %f %f\n', BOTALL');
-fclose(fid);
+%%
+ids = [2:10 10]';
+for ii = 1:9 tp{ii,1} = 'Top';end; tp{10,1} = 'Bot';
+for ii = 1:length(ids)
+    [ BOT, info ] = readArcGisASCIIfile( ['gis_data/PP1766_DIS_Layer' num2str(ids(ii)) '_' tp{ii,1} '_ASCII.txt'] );
+    BOT(BOT == BOT(1,1)) = nan;
+    % find cells with elevation information
+    [II, JJ] = find(BOT ~= 0 & ~isnan(BOT));
+    if ii == 1
+        % create the raster grid the first time an info file is read
+        Xgrid = info.xllcorner+info.cellsize/2:...
+                info.cellsize:...
+                info.xllcorner+info.cellsize/2+info.cellsize*(info.ncols-1);
+    
+        Ygrid = info.yllcorner+info.cellsize/2:...
+                info.cellsize:...
+                info.yllcorner+info.cellsize/2+info.cellsize*(info.nrows-1);
+    end
+    
+    % Interpolate from the BOT raster the buffer points
+    Fbot = scatteredInterpolant(Xgrid(JJ)', Ygrid(II)', ...
+        BOT(sub2ind(size(BOT),II,JJ)));
+    Fbot.Method = 'nearest';
+    Fbot.ExtrapolationMethod = 'nearest';
+    buff_pnt_Z = Fbot(buff_pnt(:,1), buff_pnt(:,2));
+    BOT_ELEV{ii,1} = [ Xgrid(JJ)', Ygrid(II)', ...
+                       BOT(sub2ind(size(BOT),II,JJ));...
+                       buff_pnt buff_pnt_Z ];
+    
+end
+%% plot elevations
+clf
+hold on
+for ii = 1:10
+    plot3(BOT_ELEV{ii,1}(:,1), BOT_ELEV{ii,1}(:,2), BOT_ELEV{ii,1}(:,3),'.')
+end
 
+%% ============ BOTTOM Elevation file based on CVHM grid ==================
+% write Bottom elevation file
+writeScatteredData('CVHM_Bot_elev.npsat', struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), BOT_ELEV{10,1})
+%% ============ Hydraulic Conductivity data based on CVHM grid ============
+% read the data from C. Faunt
+for ii = 1:10
+    fid = fopen(['hyd_cond/HK_lyr' num2str(ii) '.txt'],'r');
+    A = fscanf(fid,'%f', 441*98);
+    HK{ii,1} = reshape(A,98,441)';
+    fclose(fid);
+    
+    fid = fopen(['hyd_cond/VK_lyr' num2str(ii) '.txt'],'r');
+    A = fscanf(fid,'%f', 441*98);
+    VK{ii,1} = reshape(A,98,441)';
+    fclose(fid);
+end
+%% 
+% loop through the cells that contain HK and VK information and identify
+% their coordinates in the rotated system.
+HKALL = nan(50000,12);
+VKALL = nan(50000,12);
+cnt = 1;
+for ii = 1:size(HK{1,1},1)
+    for jj = 1:size(HK{1,1},2)
+        ii
+        if HK{1,1}(ii,jj) == 0
+            continue;
+        end
+        % find the row in the BAS shapefile
+        id = find([bas.ROW]' == ii & [bas.COLUMN_]' == jj);
+        % calculate the center coordinate of the cell
+        xc = mean(bas(id,1).X(1:end-1));
+        yc = mean(bas(id,1).Y(1:end-1));
+        hk = nan(1,10);
+        vk = nan(1,10);
+        for kk = 1:10
+            hk(kk) = HK{kk,1}(ii,jj);
+            vk(kk) = VK{kk,1}(ii,jj);
+        end
+      HKALL(cnt,:) = [xc yc hk];
+      VKALL(cnt,:) = [xc yc vk];
+      cnt = cnt + 1;
+    end
+end
+HKALL(cnt:end,:)=[];
+VKALL(cnt:end,:)=[];
+%% 
+% so far we have made a list of nodes with conductivity information.
+% next we will extrapolate the values for the buffer nodes
+for ii = 1:10
+    ii
+    % first remove those that are 0
+    id_zero = find(HKALL(:,2+ii) == 0);
+    if ~isempty(id_zero)
+        id_nonzero = find(HKALL(:,2+ii) ~= 0);
+        FHK = scatteredInterpolant(HKALL(id_nonzero,1), HKALL(id_nonzero,2), HKALL(id_nonzero,2+ii));
+        FHK.Method = 'linear';
+        FHK.ExtrapolationMethod = 'nearest';
+        HKALL(id_zero,2+ii) = FHK(HKALL(id_zero,1), HKALL(id_zero,2));
+    end
+    
+    FHK = scatteredInterpolant(HKALL(:,1), HKALL(:,2), HKALL(:,2+ii));
+    FHK.Method = 'linear';
+    FHK.ExtrapolationMethod = 'nearest';
+    HK_buff(:,ii) = FHK(buff_pnt(:,1), buff_pnt(:,2));
+    
+    
+    id_zero = find(VKALL(:,2+ii) == 0);
+    if ~isempty(id_zero)
+        id_nonzero = find(VKALL(:,2+ii) ~= 0);
+        FVK = scatteredInterpolant(VKALL(id_nonzero,1), VKALL(id_nonzero,2), VKALL(id_nonzero,2+ii));
+        FVK.Method = 'linear';
+        FVK.ExtrapolationMethod = 'nearest';
+        VKALL(id_zero,2+ii) = FVK(VKALL(id_zero,1), VKALL(id_zero,2));
+    end
+    
+    FVK = scatteredInterpolant(VKALL(:,1), VKALL(:,2), VKALL(:,2+ii));
+    FVK.Method = 'nearest';
+    FVK.ExtrapolationMethod = 'nearest';
+    VK_buff(:,ii) = FVK(buff_pnt(:,1), buff_pnt(:,2));
+end
+%%
+% Next we will calculate the bottom elevation on the nodes where the
+% hydraulic conductivity is defined. For the hydraulic conductivity
+% functions we dont need the elevation of the last layer
+XY_ALL = [HKALL(:,1) HKALL(:,2);buff_pnt(:,1), buff_pnt(:,2)];
+HKbuff = [HKALL(:,3:end);HK_buff];
+VKbuff = [VKALL(:,3:end);VK_buff];
+for ii = 1:9
+    FELEV = scatteredInterpolant(BOT_ELEV{ii,1}(:,1), BOT_ELEV{ii,1}(:,2),BOT_ELEV{ii,1}(:,3));
+    FELEV.Method = 'linear';
+    FELEV.ExtrapolationMethod = 'nearest';
+    HVK_ELEV(:,ii) = FELEV(XY_ALL(:,1),XY_ALL(:,2));
+end
+%%
+% Last, print to file
+HKDATA = [XY_ALL HKbuff(:,1)];
+VKDATA = [XY_ALL VKbuff(:,1)];
+for ii = 1:9
+    HKDATA = [HKDATA HVK_ELEV(:,ii) HKbuff(:,ii+1)];
+    VKDATA = [VKDATA HVK_ELEV(:,ii) VKbuff(:,ii+1)];
+end
+%%
+writeScatteredData('CVHM_HK.npsat', struct('PDIM',2,'TYPE','FULL','MODE','STRATIFIED'), HKDATA);
+writeScatteredData('CVHM_VK.npsat', struct('PDIM',2,'TYPE','FULL','MODE','STRATIFIED'), VKDATA);
 
 
