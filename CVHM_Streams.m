@@ -174,6 +174,45 @@ end
 %% Make a unique list of stream cells and calculate the total river length 
 % per cell
 stream_cell_unique = [];
+cell_riv_len = [];
+for ii = 1:size(CVHMSTRM,1)
+    for jj = 1:size(CVHMSTRM(ii,1).segments,1)
+        r = CVHMSTRM(ii,1).segments(jj,1).row;
+        c = CVHMSTRM(ii,1).segments(jj,1).col;
+        if ~isempty(stream_cell_unique)
+            id = find(stream_cell_unique(:,1) ==  r & stream_cell_unique(:,2) == c);
+            if isempty(id)
+                stream_cell_unique = [stream_cell_unique;r c];
+                cell_riv_len = [cell_riv_len; 0];
+                id = length(cell_riv_len);
+            end
+        else
+            stream_cell_unique = [r c];
+            cell_riv_len = 0;
+            id = 1;
+        end
+        [Xs, Ys] = polysplit(CVHMSTRM(ii,1).segments(jj,1).X, CVHMSTRM(ii,1).segments(jj,1).Y);
+        len = 0;
+        for k = 1:size(Xs,1)
+            for kk = 1:length(Xs{k,1})-1
+                len = len + sqrt((Xs{k,1}(kk+1) - Xs{k,1}(kk))^2 + (Ys{k,1}(kk+1) - Ys{k,1}(kk))^2);
+            end
+        end
+        CVHMSTRM(ii,1).segments(jj,1).riv_len = len;
+        cell_riv_len(id) = cell_riv_len(id) + len;
+    end
+end
+%% For each unique cell assign a stream flow volume
+CellFlow = zeros(size(stream_cell_unique,1),1);
+for ii = 1:length(stream_cell_unique)
+    id = find(STRMS(:,2) == stream_cell_unique(ii,1) & ...
+              STRMS(:,3) == stream_cell_unique(ii,2));
+    for jj = 1:length(id)
+        CellFlow(ii) = CellFlow(ii) + STRMS(id(jj),4);
+    end
+    
+end
+%% Assign the rate to the cell according to their length
 for ii = 1:size(CVHMSTRM,1)
     for jj = 1:size(CVHMSTRM(ii,1).segments,1)
         
