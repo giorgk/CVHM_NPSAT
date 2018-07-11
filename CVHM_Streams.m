@@ -3,7 +3,7 @@
 % In this repository we uploaded the same geometry split into the grid
 % defined by the bas shapefile and deleting any fiels not releated to
 % streams.
-%
+%{
 cvhm_stream = shaperead('gis_data/CVHM_streams');
 %% process each river independently.
 % group the segments for each river
@@ -39,7 +39,7 @@ for ii = 2:size(cvhm_stream,1)
         CVHMSTRM(Nriv+1,1).segments(1,1).col = cvhm_stream(ii,1).COLUMN_;
     end
 end
-%}
+%
 %% for each river make a unique list of nodes
 for ii = 1:size(CVHMSTRM,1)
     CVHMSTRM(ii,1).ND = [];
@@ -169,6 +169,27 @@ for ii = 1:size(CVHMSTRM,1)
     end
     CVHMSTRM(ii,1).PATHS = PTHS;
     CVHMSTRM(ii,1).NORMS = NRM;
+end
+%}
+%% Make a unique list of stream cells and calculate the total river length 
+% per cell
+stream_cell_unique = [];
+for ii = 1:size(CVHMSTRM,1)
+    for jj = 1:size(CVHMSTRM(ii,1).segments,1)
+        
+    end
+end
+%% Add rate and width information
+for ii = 1:size(CVHMSTRM,1)
+    for jj = 1:size(CVHMSTRM(ii,1).segments,1)
+        r = CVHMSTRM(ii,1).segments(jj,1).row;
+        c = CVHMSTRM(ii,1).segments(jj,1).col;
+        CVHMSTRM(ii,1).segments(jj,1).Qm3day = 0;
+        id = find(STRMS(:,2) == r & STRMS(:,3) == c);
+        for k = 1:length(id)
+            CVHMSTRM(ii,1).segments(jj,1).Qm3day = CVHMSTRM(ii,1).segments(jj,1).Qm3day + STRMS(id(k),4);
+        end
+    end
 end
 %% print the information for reading in Houdini
 fid = fopen('temp.txt', 'w');
