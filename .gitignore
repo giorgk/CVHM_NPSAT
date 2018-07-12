@@ -1,6 +1,7 @@
 #Ignore temporary matlab files
 *~
-
+*temp*
+*backup/
 
 
 

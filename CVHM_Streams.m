@@ -274,12 +274,14 @@ for ii = 1:size(CVHMSTRM,1)
 end
 %% print the information for reading in Houdini
 ii = 4;
-fid = fopen('temp.txt', 'w');
-fprintf(fid, '%d\n', length(CVHMSTRM(ii,1).PATHS{1, 1}));
-fprintf(fid, '%f %f %f %f %f %f %f %f\n',...
-    [CVHMSTRM(ii,1).ND(CVHMSTRM(ii,1).PATHS{1, 1}',:)/100000 zeros(length(CVHMSTRM(ii,1).PATHS{1, 1}),1)... % P {x,y,z}
-     CVHMSTRM(ii,1).NORMS{1, 1}(:,1:2) zeros(length(CVHMSTRM(ii,1).PATHS{1, 1}),1) ... % N{x,y,z}
-     CVHMSTRM(ii,1).Path_nd_width{1,1}' [CVHMSTRM(ii,1).Path_Flow{1,1} 0]'  ...
-     ]');
-fclose(fid);
+for ii = 1:size(CVHMSTRM,1)
+    fid = fopen(['temp_stream' num2str(ii) '.txt'], 'w');
+    fprintf(fid, '%d\n', length(CVHMSTRM(ii,1).PATHS{1, 1}));
+    fprintf(fid, '%f %f %f %f %f %f %f %f\n',...
+        [CVHMSTRM(ii,1).ND(CVHMSTRM(ii,1).PATHS{1, 1}',:)/100000 zeros(length(CVHMSTRM(ii,1).PATHS{1, 1}),1)... % P {x,y,z}
+         CVHMSTRM(ii,1).NORMS{1, 1}(:,1:2) zeros(length(CVHMSTRM(ii,1).PATHS{1, 1}),1) ... % N{x,y,z}
+         CVHMSTRM(ii,1).Path_nd_width{1,1}' [CVHMSTRM(ii,1).Path_Flow{1,1} 0]'  ...
+         ]');
+    fclose(fid);
+end
 
