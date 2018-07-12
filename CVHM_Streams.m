@@ -3,11 +3,11 @@
 % In this repository we uploaded the same geometry split into the grid
 % defined by the bas shapefile and deleting any fiels not releated to
 % streams.
-%{
+%
 cvhm_stream = shaperead('gis_data/CVHM_streams');
 %% process each river independently.
 % group the segments for each river
-% initialize the custom structure with the first river segments
+% initialize the custom structure with the first river segment
 CVHMSTRM(1,1).Name = cvhm_stream(1,1).NAME;
 CVHMSTRM(1,1).segments(1,1).X = cvhm_stream(1,1).X;
 CVHMSTRM(1,1).segments(1,1).Y = cvhm_stream(1,1).Y;
@@ -75,7 +75,8 @@ for ii = 1:size(CVHMSTRM,1)
                                (CVHMSTRM(ii,1).ND(:,2) - Ys{kk,1}(mm+1)).^2);
                 id2 = find(dst < 0.1);
                 if id1 ~= id2
-                    CVHMSTRM(ii,1).G = addedge(CVHMSTRM(ii,1).G, id1, id2);
+                    Newedge = table([id1 id2], jj, 'VariableNames',{'EndNodes','seg_id'});
+                    CVHMSTRM(ii,1).G = addedge(CVHMSTRM(ii,1).G, Newedge);
                 end
             end
         end
@@ -86,14 +87,16 @@ end
 %     mx_conn(ii,1) = max(CVHMSTRM(ii,1).G.degree);
 % end
 %% plot a specific river
-% ii = 9;
-% p = CVHMSTRM(ii,1).G.plot;
-% p.XData = CVHMSTRM(ii,1).ND(:,1);
-% p.YData = CVHMSTRM(ii,1).ND(:,2);
-% p.NodeLabel = [1:size(CVHMSTRM(ii,1).ND,1)];
+ ii = 9;
+ p = CVHMSTRM(ii,1).G.plot;
+ p.XData = CVHMSTRM(ii,1).ND(:,1);
+ p.YData = CVHMSTRM(ii,1).ND(:,2);
+ p.NodeLabel = [1:size(CVHMSTRM(ii,1).ND,1)];
 
 
 %% Calculate Node normals for each river segment
+% This section, besides node normals identifies the main rivers and the
+% tributaries and makes separate paths for each.
 for ii = 1:size(CVHMSTRM,1)
     clear PTHS NRM
     % find the terminal nodes
@@ -163,6 +166,7 @@ for ii = 1:size(CVHMSTRM,1)
            NRM{jj,1}(k,:) = N;
            
            if jj > 1 && CVHMSTRM(ii,1).G.degree(PTHS{jj,1}(k)) == 3
+               PTHS{jj,1}(k+1:end) = [];
                break;
            end
         end
@@ -203,6 +207,7 @@ for ii = 1:size(CVHMSTRM,1)
     end
 end
 %% For each unique cell assign a stream flow volume
+load('AvStresses.mat', 'STRMS')
 CellFlow = zeros(size(stream_cell_unique,1),1);
 for ii = 1:length(stream_cell_unique)
     id = find(STRMS(:,2) == stream_cell_unique(ii,1) & ...
@@ -212,28 +217,69 @@ for ii = 1:length(stream_cell_unique)
     end
     
 end
-%% Assign the rate to the cell according to their length
-for ii = 1:size(CVHMSTRM,1)
-    for jj = 1:size(CVHMSTRM(ii,1).segments,1)
-        
-    end
-end
-%% Add rate and width information
+%% Assign the rate and width to the cell according to the length
 for ii = 1:size(CVHMSTRM,1)
     for jj = 1:size(CVHMSTRM(ii,1).segments,1)
         r = CVHMSTRM(ii,1).segments(jj,1).row;
         c = CVHMSTRM(ii,1).segments(jj,1).col;
-        CVHMSTRM(ii,1).segments(jj,1).Qm3day = 0;
-        id = find(STRMS(:,2) == r & STRMS(:,3) == c);
-        for k = 1:length(id)
-            CVHMSTRM(ii,1).segments(jj,1).Qm3day = CVHMSTRM(ii,1).segments(jj,1).Qm3day + STRMS(id(k),4);
+        id = find(stream_cell_unique(:,1) ==  r & stream_cell_unique(:,2) == c);
+        CVHMSTRM(ii,1).segments(jj,1).Qcell = CellFlow(id)*(CVHMSTRM(ii,1).segments(jj,1).riv_len/cell_riv_len(id));
+        
+        q_rate = 1000;
+        width = 50;
+        while abs(q_rate) > 0.4
+            width = width + 50;
+            q_rate = CVHMSTRM(ii,1).segments(jj,1).Qcell/(CVHMSTRM(ii,1).segments(jj,1).riv_len*width);
+        end
+        CVHMSTRM(ii,1).segments(jj,1).Width = width;
+    end
+end
+%% loop through the segments and set the width and Q rate with the order 
+% the graph nodes of the rivers are.
+for ii = 1:size(CVHMSTRM,1)
+    for mm = 1:size(CVHMSTRM(ii,1).PATHS,1)
+        for k = 1:length(CVHMSTRM(ii,1).PATHS{mm,1})
+            idm = 0;
+            if k == 1
+                id1 = CVHMSTRM(ii,1).PATHS{mm,1}(k);
+                id2 = CVHMSTRM(ii,1).PATHS{mm,1}(k+1);
+            elseif k == length(CVHMSTRM(ii,1).PATHS{mm,1})
+                id1 = CVHMSTRM(ii,1).PATHS{mm,1}(k-1);
+                id2 = CVHMSTRM(ii,1).PATHS{mm,1}(k);
+            else
+                id1 = CVHMSTRM(ii,1).PATHS{mm,1}(k-1);
+                idm = CVHMSTRM(ii,1).PATHS{mm,1}(k);
+                id2 = CVHMSTRM(ii,1).PATHS{mm,1}(k+1);
+            end
+            if idm == 0
+                id_edge = CVHMSTRM(ii,1).G.findedge(id1,id2);
+                jj = CVHMSTRM(ii,1).G.Edges.seg_id(id_edge);
+                w = CVHMSTRM(ii,1).segments(jj,1).Width;
+            else
+                id_edge1 = CVHMSTRM(ii,1).G.findedge(id1,idm);
+                id_edge2 = CVHMSTRM(ii,1).G.findedge(idm,id2);
+                jj1 = CVHMSTRM(ii,1).G.Edges.seg_id(id_edge1);
+                jj = CVHMSTRM(ii,1).G.Edges.seg_id(id_edge2);
+                w = max(CVHMSTRM(ii,1).segments(jj1,1).Width, CVHMSTRM(ii,1).segments(jj,1).Width);
+            end
+            CVHMSTRM(ii,1).Path_nd_width{mm,1}(k) = w;
+            if k ~= length(CVHMSTRM(ii,1).PATHS{mm,1})
+                len = sqrt((CVHMSTRM(ii,1).ND(CVHMSTRM(ii,1).PATHS{mm,1}(k+1),1) - CVHMSTRM(ii,1).ND(CVHMSTRM(ii,1).PATHS{mm,1}(k),1) ).^2 + ...
+                           (CVHMSTRM(ii,1).ND(CVHMSTRM(ii,1).PATHS{mm,1}(k+1),2) - CVHMSTRM(ii,1).ND(CVHMSTRM(ii,1).PATHS{mm,1}(k),2) ).^2);
+                CVHMSTRM(ii,1).Path_Flow{mm,1}(k) = CVHMSTRM(ii,1).segments(jj,1).Qcell*(len / CVHMSTRM(ii,1).segments(jj,1).riv_len);
+            end
+            
         end
     end
 end
 %% print the information for reading in Houdini
+ii = 4;
 fid = fopen('temp.txt', 'w');
-fprintf(fid, '%f %f %f %f %f %f\n',...
-    [CVHMSTRM(1,1).ND(CVHMSTRM(1).PATHS{1, 1}',:)/100000 zeros(147,1)...
-     CVHMSTRM(1).NORMS{1, 1}(:,1:2) zeros(147,1)]');
+fprintf(fid, '%d\n', length(CVHMSTRM(ii,1).PATHS{1, 1}));
+fprintf(fid, '%f %f %f %f %f %f %f %f\n',...
+    [CVHMSTRM(ii,1).ND(CVHMSTRM(ii,1).PATHS{1, 1}',:)/100000 zeros(length(CVHMSTRM(ii,1).PATHS{1, 1}),1)... % P {x,y,z}
+     CVHMSTRM(ii,1).NORMS{1, 1}(:,1:2) zeros(length(CVHMSTRM(ii,1).PATHS{1, 1}),1) ... % N{x,y,z}
+     CVHMSTRM(ii,1).Path_nd_width{1,1}' [CVHMSTRM(ii,1).Path_Flow{1,1} 0]'  ...
+     ]');
 fclose(fid);
 
