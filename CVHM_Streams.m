@@ -3,7 +3,7 @@
 % In this repository we uploaded the same geometry split into the grid
 % defined by the bas shapefile and deleting any fiels not releated to
 % streams.
-%
+%{
 cvhm_stream = shaperead('gis_data/CVHM_streams');
 %% process each river independently.
 % group the segments for each river
@@ -174,7 +174,7 @@ for ii = 1:size(CVHMSTRM,1)
     CVHMSTRM(ii,1).PATHS = PTHS;
     CVHMSTRM(ii,1).NORMS = NRM;
 end
-%}
+%
 %% Make a unique list of stream cells and calculate the total river length 
 % per cell
 stream_cell_unique = [];
@@ -274,14 +274,53 @@ for ii = 1:size(CVHMSTRM,1)
 end
 %% print the information for reading in Houdini
 ii = 4;
+cnt = 1;
 for ii = 1:size(CVHMSTRM,1)
-    fid = fopen(['temp_stream' num2str(ii) '.txt'], 'w');
-    fprintf(fid, '%d\n', length(CVHMSTRM(ii,1).PATHS{1, 1}));
-    fprintf(fid, '%f %f %f %f %f %f %f %f\n',...
-        [CVHMSTRM(ii,1).ND(CVHMSTRM(ii,1).PATHS{1, 1}',:)/100000 zeros(length(CVHMSTRM(ii,1).PATHS{1, 1}),1)... % P {x,y,z}
-         CVHMSTRM(ii,1).NORMS{1, 1}(:,1:2) zeros(length(CVHMSTRM(ii,1).PATHS{1, 1}),1) ... % N{x,y,z}
-         CVHMSTRM(ii,1).Path_nd_width{1,1}' [CVHMSTRM(ii,1).Path_Flow{1,1} 0]'  ...
-         ]');
+    for mm = 1:size(CVHMSTRM(ii,1).PATHS,1)
+        fid = fopen(['temp_stream' num2str(cnt) '.txt'], 'w');
+        fprintf(fid, '%d\n', length(CVHMSTRM(ii,1).PATHS{mm, 1}));
+        fprintf(fid, '%f %f %f %f %f %f %f %f\n',...
+            [CVHMSTRM(ii,1).ND(CVHMSTRM(ii,1).PATHS{mm, 1}',:)/100000 zeros(length(CVHMSTRM(ii,1).PATHS{mm, 1}),1)... % P {x,y,z}
+             CVHMSTRM(ii,1).NORMS{mm, 1}(:,1:2) zeros(length(CVHMSTRM(ii,1).PATHS{mm, 1}),1) ... % N{x,y,z}
+             CVHMSTRM(ii,1).Path_nd_width{mm,1}' [CVHMSTRM(ii,1).Path_Flow{mm,1} 0]'  ...
+             ]');
+        fclose(fid);
+        cnt = cnt + 1;
+    end
+end
+%}
+%% Read stream polygons from houdini.
+% Run this part after the animation in houdini file "streams.hipnc" has
+% been played. The animation creates one file per river path.
+% Here we read the files and create the stream input file
+cnt = 1;
+clear STRM_POLY
+STRM_POLY(1,1).Q = [];
+STRM_POLY(1,1).Geo = [];
+for ii = 1:53 % check the number of generated files
+    fid = fopen(['temp_stream_out' num2str(ii) '.txt'], 'r');
+    Npoly = textscan(fid,'%d',1);
+    for jj = 1:Npoly{1,1}
+        C = textscan(fid,'%d %f',1);
+        STRM_POLY(cnt,1).Q = C{1,2};
+        poly = zeros(C{1,1},2);
+        for k = 1:C{1,1}
+            C = textscan(fid,'%f %f',1);
+            poly(k,:) = [C{1,1} C{1,2}] ;
+        end
+        poly = poly*100000;
+        STRM_POLY(cnt,1).Geo = poly;
+        cnt = cnt + 1;
+    end
     fclose(fid);
 end
+STRM_POLY(find([STRM_POLY.Q]' == 0),:) = [];
+%% Write the stream file (finally!)
+fid = fopen('CVHM_streams.npsat','w');
+fprintf(fid, '%d\n', size(STRM_POLY,1));
+for ii = 1:size(STRM_POLY,1)
+    fprintf(fid, '%d %f\n', [size(STRM_POLY(ii,1).Geo,1) STRM_POLY(ii,1).Q]);
+    fprintf(fid, '%f %f\n', STRM_POLY(ii,1).Geo');
+end
+fclose(fid);
 

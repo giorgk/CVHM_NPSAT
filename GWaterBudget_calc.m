@@ -30,6 +30,8 @@ for i=1:510
     end
     STRLK.data(:,i) = OUT{i,1}{8,2}(:,4);
     STRLK.ym(i,:) = [y m];
+    RCH.data{i,1} = reshape(OUT{i,1}{11,2}(:,2),98,441)';
+    RCH.ym(i,:) = [y m];
     m=m+1;
 end
 %
@@ -74,4 +76,14 @@ end
 AVstrm = sum(AVstrm,2)/totdays; %m^3/day Average over the period of interest
 STRMS = [STRLK.rc AVstrm];
 save('AvStresses','STRMS','-append')
-
+%% Average Recharge
+AVrch = zeros(size(RCH.data{1,1},1), size(RCH.data{1,1},2));
+ym = RCH.ym(istart:iend,:);
+totdays = 0;
+for ii = 1:size(ym,1)
+    totdays = totdays + eomday(ym(ii,1), ym(ii,2));
+    AVrch = AVrch + RCH.data{ii,1}*eomday(ym(ii,1), ym(ii,2)); %m^3/month;
+end
+AVrch = AVrch/totdays;
+%%
+save('AvStresses','AVrch','-append')
