@@ -87,3 +87,41 @@ end
 AVrch = AVrch/totdays;
 %%
 save('AvStresses','AVrch','-append')
+%% Prepare recharge for writing to Scattered format
+% From the gridded format convert to x,y,value format based on the actuall 
+% coordinate system.
+% Run the first 3 sections of the PrepareGeometryData.m to import and
+% process the bas variable
+% Loop through the modflow grid cells and fine the center coordinate of the
+% cell in the real system
+R = [bas.ROW]';
+C = [bas.COLUMN_]';
+xy_rch = [];
+for ii = 1:size(AVrch,1)
+    for jj = 1:size(AVrch,2)
+        id = find(R == ii & C == jj);
+        if isempty(id)
+            continue;
+        elseif length(id) == 1
+            xc = mean(bas(id,1).X(1:end-1));
+            yc = mean(bas(id,1).Y(1:end-1));
+            xy_rch = [xy_rch; xc yc AVrch(ii,jj)];
+        else
+            error('Thats so wrong');
+        end
+    end
+end
+%% 
+% add the buffer nodes.
+% run the section from PrepareGeometryData.m which creates the buff_pnt
+% variable
+% create an interpolant with the existing data
+Frch = scatteredInterpolant(xy_rch(:,1), xy_rch(:,2), xy_rch(:,3));
+Frch.Method = 'nearest';
+Frch.ExtrapolationMethod = 'nearest';
+buf_val = Frch(buff_pnt(:,1), buff_pnt(:,2));
+xy_rch = [xy_rch; buff_pnt buf_val];
+%% write the rch file
+writeScatteredData('CVHM_RCH.npsat', struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), xy_rch);
+
+

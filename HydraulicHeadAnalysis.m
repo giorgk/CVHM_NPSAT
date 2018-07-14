@@ -1,6 +1,7 @@
 %% For the analysis load the file HEADS.mat
 % This is not included in the repository because the size is about 224 MB
-%
+%{
+load('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/ClaudiaRun/HEADS.mat')
 clear TOPHEAD
 % For each time step compute the top most head value
 for it = 1:size(HEADS,1)
@@ -16,20 +17,21 @@ for it = 1:size(HEADS,1)
         end
     end
 end
-%
+%}
 %% Calculate Standard deviation
 head_std = nan(size(HEADS{1,1},1), size(HEADS{1,1},2));
+timespan = istart:1:iend;
 for ii = 1:size(HEADS{1,1},1)
     for jj = 1:size(HEADS{1,1},2)
-        temp = nan(size(TOPHEAD,1),1);
-        for kk = 1:1:size(TOPHEAD,1)
-            temp(kk,1) = TOPHEAD{kk,1}(ii,jj);
+        temp = nan(length(timespan),1);
+        for kk = 1:length(timespan)
+            temp(kk,1) = TOPHEAD{timespan(kk),1}(ii,jj);
         end
         head_std(ii,jj) = std(temp);
     end
 end
 %%
 temp = head_std;
-temp(head_std>2) = nan;
+%temp(head_std>2) = nan;
 surf(temp,'edgecolor','none')
 view(360,-90)
