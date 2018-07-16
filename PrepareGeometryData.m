@@ -108,7 +108,9 @@ end
 
 %% ============ BOTTOM Elevation file based on CVHM grid ==================
 % write Bottom elevation file
-writeScatteredData('CVHM_Bot_elev.npsat', struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), BOT_ELEV{10,1})
+BOT_mod = BOT_ELEV{10,1};
+BOT_mod(BOT_mod(:,3)>0,3) = 0;
+writeScatteredData('CVHM_Bot_elev.npsat', struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), BOT_mod)
 %% ============ Hydraulic Conductivity data based on CVHM grid ============
 % read the data from C. Faunt
 for ii = 1:10

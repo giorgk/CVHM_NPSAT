@@ -2,7 +2,7 @@
 % For each line find in which cell they correspond
 mesh_outline = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/BAS_active_outline.shp');
 bas = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/BAS_active.shp');
-%{
+%
 %% make a unique list of outline points
 %
 PNTS = nan(5000,2);
@@ -151,4 +151,4 @@ for ii = 1:size(S, 1)
     yc = mean(S(ii,1).Y(1:end-1));
     S(ii,1).bot = Fbot(xc, yc);
 end
-find([S.bot]' > [S.Hav]')
+%find([S.bot]' > [S.Hav]')
