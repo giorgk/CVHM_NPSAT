@@ -3,7 +3,7 @@
 % In this repository we uploaded the same geometry split into the grid
 % defined by the bas shapefile and deleting any fiels not releated to
 % streams.
-%{
+%
 cvhm_stream = shaperead('gis_data/CVHM_streams');
 %% process each river independently.
 % group the segments for each river
@@ -87,7 +87,7 @@ end
 %     mx_conn(ii,1) = max(CVHMSTRM(ii,1).G.degree);
 % end
 %% plot a specific river
- ii = 9;
+ ii = 8;
  p = CVHMSTRM(ii,1).G.plot;
  p.XData = CVHMSTRM(ii,1).ND(:,1);
  p.YData = CVHMSTRM(ii,1).ND(:,2);
