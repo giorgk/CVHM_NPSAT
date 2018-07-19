@@ -109,6 +109,7 @@ end
 %
 %% Calculate Standard deviation
 head_std = nan(size(HEADS{1,1},1), size(HEADS{1,1},2));
+head_Av = nan(size(HEADS{1,1},1), size(HEADS{1,1},2));
 timespan = istart:1:iend;
 for ii = 1:size(HEADS{1,1},1)
     for jj = 1:size(HEADS{1,1},2)
@@ -117,6 +118,7 @@ for ii = 1:size(HEADS{1,1},1)
             temp(kk,1) = TOPHEAD{timespan(kk),1}(ii,jj);
         end
         head_std(ii,jj) = std(temp);
+        head_Av(ii,jj) = mean(temp);
     end
 end
 %%
@@ -152,3 +154,23 @@ for ii = 1:size(S, 1)
     S(ii,1).bot = Fbot(xc, yc);
 end
 %find([S.bot]' > [S.Hav]')
+%% Interpolate head values on nodes
+Pnt_hd = nan(size(PNTS, 1),1);
+for ii = 1:size(PNTS, 1)
+    % find how many segments have this node in common
+    id = find(LNS(:,1) == ii | LNS(:,2) == ii);
+    hd_nd = nan(length(id), 1);
+    for jj = 1:length(id)
+        hd_nd(jj) = head_Av(LNS_IJ(jj,1),LNS_IJ(jj,2));
+    end
+    Pnt_hd(ii,1) = mean(hd_nd);
+end
+%% write the file
+% I have first to implement the line boundary
+fid = fopen('CVHM_BC.npsat','w');
+fprintf(fid, '%d\n', size(LNS,1));
+% for ii = 1:size(LNS,1)
+%     fprintf(fid, 'LINE 2 '
+% end
+
+fclose(fid);
