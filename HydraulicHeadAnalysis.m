@@ -1,5 +1,6 @@
 %% Create a list of lines of the domain outline.
 % For each line find in which cell they correspond
+%{
 mesh_outline = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/BAS_active_outline.shp');
 bas = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/BAS_active.shp');
 %
@@ -108,6 +109,7 @@ for it = 1:size(HEADS,1)
 end
 %
 %% Calculate Standard deviation
+% get the istart, iend variables from the GWaterBudget_calc script
 head_std = nan(size(HEADS{1,1},1), size(HEADS{1,1},2));
 head_Av = nan(size(HEADS{1,1},1), size(HEADS{1,1},2));
 timespan = istart:1:iend;
@@ -128,6 +130,7 @@ surf(temp,'edgecolor','none')
 view(360,-90)
 %}
 %% assign values to segments and create BC shapefile
+%{
 clear S
 timespan = istart:1:iend;
 for ii = 1:size(LNS,1)
@@ -143,6 +146,7 @@ for ii = 1:size(LNS,1)
     S(ii,1).Hav = mean(temp);
     S(ii,1).Hstd = std(temp);
 end
+%%
 shapewrite(S,'gis_data/CVHM_outline_head')
 %% Add the bottom info
 bot = read_Scattered('CVHM_Bot_elev.npsat', 2);
@@ -154,6 +158,7 @@ for ii = 1:size(S, 1)
     S(ii,1).bot = Fbot(xc, yc);
 end
 %find([S.bot]' > [S.Hav]')
+%}
 %% Interpolate head values on nodes
 Pnt_hd = nan(size(PNTS, 1),1);
 for ii = 1:size(PNTS, 1)
@@ -161,7 +166,7 @@ for ii = 1:size(PNTS, 1)
     id = find(LNS(:,1) == ii | LNS(:,2) == ii);
     hd_nd = nan(length(id), 1);
     for jj = 1:length(id)
-        hd_nd(jj) = head_Av(LNS_IJ(jj,1),LNS_IJ(jj,2));
+        hd_nd(jj) = head_Av(LNS_IJ(id(jj),1),LNS_IJ(id(jj),2));
     end
     Pnt_hd(ii,1) = mean(hd_nd);
 end
@@ -169,8 +174,45 @@ end
 % I have first to implement the line boundary
 fid = fopen('CVHM_BC.npsat','w');
 fprintf(fid, '%d\n', size(LNS,1));
-% for ii = 1:size(LNS,1)
-%     fprintf(fid, 'LINE 2 '
-% end
-
+for ii = 1:size(LNS,1)
+    fprintf(fid, 'EDGETOP 2\n');
+    fprintf(fid, '%f %f %f\n', [PNTS(LNS(ii,1),:) Pnt_hd(LNS(ii,1),1)]);
+    fprintf(fid, '%f %f %f\n', [PNTS(LNS(ii,2),:) Pnt_hd(LNS(ii,2),1)]);
+end
 fclose(fid);
+
+%% Use the average of Head for the simulation period as top function.
+% Run the 2 sections which read and average the hydraulic head
+% Run the first 3 sections of the PrepareGeometryData.m to import and
+% process the bas variable
+% Loop through the modflow grid cells and find the center coordinate of the
+% cell in the real system
+R = [bas.ROW]';
+C = [bas.COLUMN_]';
+xy_top = [];
+for ii = 1:size(head_Av, 1)
+    for jj = 1:size(head_Av, 2)
+        id = find(R == ii & C == jj);
+        if isempty(id)
+            continue;
+        elseif length(id) == 1
+            xc = mean(bas(id,1).X(1:end-1));
+            yc = mean(bas(id,1).Y(1:end-1));
+            xy_top = [xy_top; xc yc head_Av(ii,jj)];
+        else
+            error('Thats so wrong');
+        end
+    end
+end
+%% 
+% add the buffer nodes.
+% run the section from PrepareGeometryData.m which creates the buff_pnt
+% variable
+% create an interpolant with the existing data
+Ftop = scatteredInterpolant(xy_top(:,1), xy_top(:,2), xy_top(:,3));
+Ftop.Method = 'nearest';
+Ftop.ExtrapolationMethod = 'nearest';
+buf_val = Ftop(buff_pnt(:,1), buff_pnt(:,2));
+xy_top = [xy_top; buff_pnt buf_val];
+%% write the rch file
+writeScatteredData('CVHM_top_elev.npsat', struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), xy_top);

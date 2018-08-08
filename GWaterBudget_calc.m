@@ -92,7 +92,7 @@ save('AvStresses','AVrch','-append')
 % coordinate system.
 % Run the first 3 sections of the PrepareGeometryData.m to import and
 % process the bas variable
-% Loop through the modflow grid cells and fine the center coordinate of the
+% Loop through the modflow grid cells and find the center coordinate of the
 % cell in the real system
 R = [bas.ROW]';
 C = [bas.COLUMN_]';
