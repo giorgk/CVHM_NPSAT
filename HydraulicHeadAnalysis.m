@@ -128,9 +128,9 @@ temp = head_std;
 %temp(head_std>2) = nan;
 surf(temp,'edgecolor','none')
 view(360,-90)
-%}
+%
 %% assign values to segments and create BC shapefile
-%{
+%
 clear S
 timespan = istart:1:iend;
 for ii = 1:size(LNS,1)
@@ -158,7 +158,7 @@ for ii = 1:size(S, 1)
     S(ii,1).bot = Fbot(xc, yc);
 end
 %find([S.bot]' > [S.Hav]')
-%}
+%
 %% Interpolate head values on nodes
 Pnt_hd = nan(size(PNTS, 1),1);
 for ii = 1:size(PNTS, 1)
@@ -170,14 +170,25 @@ for ii = 1:size(PNTS, 1)
     end
     Pnt_hd(ii,1) = mean(hd_nd);
 end
+%}
 %% write the file
 % I have first to implement the line boundary
 fid = fopen('CVHM_BC.npsat','w');
 fprintf(fid, '%d\n', size(LNS,1));
 for ii = 1:size(LNS,1)
-    fprintf(fid, 'EDGETOP 2\n');
-    fprintf(fid, '%f %f %f\n', [PNTS(LNS(ii,1),:) Pnt_hd(LNS(ii,1),1)]);
-    fprintf(fid, '%f %f %f\n', [PNTS(LNS(ii,2),:) Pnt_hd(LNS(ii,2),1)]);
+    fprintf(fid, 'EDGETOP 2 BC_files/%s\n', ['cvhm_linebc_' num2str(ii) '.npsat'] );
+    fprintf(fid, '%f %f\n', PNTS(LNS(ii,1),:)); %Pnt_hd(LNS(ii,1),1)
+    fprintf(fid, '%f %f\n', PNTS(LNS(ii,2),:)); %Pnt_hd(LNS(ii,2),1)
+    
+    fid1 = fopen(['BC_files/cvhm_linebc_' num2str(ii) '.npsat'], 'w');
+    fprintf(fid1, 'SCATTERED\n');
+    fprintf(fid1, 'VERT\n');
+    fprintf(fid1, 'STRATIFIED\n');
+    fprintf(fid1, '%d %d\n', [2 1]);
+    fprintf(fid1, '%f %f\n', [0 Pnt_hd(LNS(ii,1),1)]);
+    fprintf(fid1, '%f %f\n', [pdist(PNTS(LNS(ii,:),:)) Pnt_hd(LNS(ii,2),1)]);
+    fclose(fid1);
+    
 end
 fclose(fid);
 

@@ -1,7 +1,7 @@
 %% The stream data exists in the CVHM database.
 % The original shapefile is the cvhm_sfr_network.
 % In this repository we uploaded the same geometry split into the grid
-% defined by the bas shapefile and deleting any fiels not releated to
+% defined by the bas shapefile and deleting any fields not releated to
 % streams.
 %
 cvhm_stream = shaperead('gis_data/CVHM_streams');
@@ -272,6 +272,13 @@ for ii = 1:size(CVHMSTRM,1)
         end
     end
 end
+%% check the total flow
+TOT_check = 0;
+for ii = 1:size(CVHMSTRM,1)
+    for mm = 1:size(CVHMSTRM(ii,1).PATHS,1)
+        TOT_check = TOT_check + sum(CVHMSTRM(ii,1).Path_Flow{mm,1});
+    end
+end
 %% print the information for reading in Houdini
 ii = 4;
 cnt = 1;
@@ -288,7 +295,7 @@ for ii = 1:size(CVHMSTRM,1)
         cnt = cnt + 1;
     end
 end
-%}
+%
 %% Read stream polygons from houdini.
 % Run this part after the animation in houdini file "streams.hipnc" has
 % been played. The animation creates one file per river path.
@@ -309,18 +316,74 @@ for ii = 1:53 % check the number of generated files
             poly(k,:) = [C{1,1} C{1,2}] ;
         end
         poly = poly*100000;
+        D = pdist(poly);
+        
+        if min(D) < 0.5
+            while 1
+                D = squareform(D);
+                break_in = false;
+                for r = 1:size(D,1)
+                    for c = 1:size(D,2)
+                        if r == c
+                            continue;
+                        else
+                            if D(r,c) == 0
+                                poly(c,:) = [];
+                                break_in = true;
+                            end
+                            if break_in
+                                break;
+                            end
+                        end
+                        if break_in
+                            break;
+                        end
+                    end
+                    if break_in
+                        break;
+                    end
+                end
+                D = pdist(poly);
+                if min(D) > 0.5
+                    break;
+                end
+            end
+        end
         STRM_POLY(cnt,1).Geo = poly;
         cnt = cnt + 1;
     end
     fclose(fid);
 end
 STRM_POLY(find([STRM_POLY.Q]' == 0),:) = [];
+%% remove the segments without area
+dlt_id = [];
+for ii = 1:size(STRM_POLY,1)
+    Np = size(STRM_POLY(ii,1).Geo,1);
+    if Np <=2
+        dlt_id = [dlt_id; ii];
+    end
+end
+STRM_POLY(dlt_id,:) = [];
 %% Write the stream file (finally!)
 fid = fopen('CVHM_streams.npsat','w');
 fprintf(fid, '%d\n', size(STRM_POLY,1));
 for ii = 1:size(STRM_POLY,1)
-    fprintf(fid, '%d %f\n', [size(STRM_POLY(ii,1).Geo,1) STRM_POLY(ii,1).Q]);
-    fprintf(fid, '%f %f\n', STRM_POLY(ii,1).Geo');
+    Np = size(STRM_POLY(ii,1).Geo,1);
+    if Np <=2
+        continue;
+    end
+    
+    if Np == 3
+        A = polyarea(STRM_POLY(ii,1).Geo(:, 1), STRM_POLY(ii,1).Geo(:, 2));
+        fprintf(fid, '%d %f\n', [size(STRM_POLY(ii,1).Geo,1) STRM_POLY(ii,1).Q/A]);
+        fprintf(fid, '%f %f\n', STRM_POLY(ii,1).Geo');
+    elseif Np == 4
+        A = polyarea(STRM_POLY(ii,1).Geo([1 2 4 3],1), STRM_POLY(ii,1).Geo([1 2 4 3],2));
+        fprintf(fid, '%d %f\n', [size(STRM_POLY(ii,1).Geo,1) STRM_POLY(ii,1).Q/A]);
+        fprintf(fid, '%f %f\n', STRM_POLY(ii,1).Geo([1 2 4 3],:)');
+    else
+        chech_that = true;
+    end
 end
 fclose(fid);
 

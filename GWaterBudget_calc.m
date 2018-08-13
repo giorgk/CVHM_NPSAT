@@ -111,6 +111,8 @@ for ii = 1:size(AVrch,1)
         end
     end
 end
+%% convert volume to rate
+xy_rch(:,3) = xy_rch(:,3)./(1609.344*1609.344);
 %% 
 % add the buffer nodes.
 % run the section from PrepareGeometryData.m which creates the buff_pnt
