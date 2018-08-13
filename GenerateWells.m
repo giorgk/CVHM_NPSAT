@@ -48,6 +48,8 @@ shapewrite(S, '/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwelldata');
 %% Create a shapefile with the well data only for the CVHM area.
 S = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVonly_WellData.shp');
 WelldataXY = [[S.X]' [S.Y]'];
+WelldataQ = [S.Q]';
+WelldataScreenLen = [S.Top]' - [S.Bot]';
 %% Bring the basic shapefile
 % Run the first 3 sections of the PrepareGeometryData.m script
 % make a list of the barycenters of the bas shapefile
@@ -55,8 +57,26 @@ XYbas = nan(length(bas),2);
 for ii = 1:length(bas)
     XYbas(ii,:) = [mean(bas(ii,1).X(1:4)) mean(bas(ii,1).Y(1:4))];
 end
-%% Calculate a density indicator for each bas point
-Thres = 20000;
+%}
+%% Compute spatial statistics for each bas point
+% For the density simply find out how many wells there are within the threshold
+
+% For the pumping find the weighted mean and weighted standard deviation
+
+Thres = 30000;
 for jj = 1:size(XYbas,1)
-    Dens(jj,1) = sum(sqrt((WelldataXY(:,1) - XYbas(jj,1)).^2 + (WelldataXY(:,2) - XYbas(jj,2)).^2) < Thres);
+    dst = sqrt((WelldataXY(:,1) - XYbas(jj,1)).^2 + (WelldataXY(:,2) - XYbas(jj,2)).^2);
+    id = find(dst < Thres);
+    Welldensity(jj,1) = length(id);
+    
+    w = Thres - dst(id,1);
+    w = w/sum(w);
+    
+    WellQmean(jj,1) = sum(WelldataQ(id,1).*w);
+    WellQstd(jj,1) = std(WelldataQ(id,1),w);
+    
+    WellSLmean(jj,1) = sum(WelldataScreenLen(id,1).*w);
+    WellSLstd(jj,1) = std(WelldataScreenLen(id,1),w);
+    
 end
+%% Compute 
