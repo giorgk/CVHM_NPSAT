@@ -63,9 +63,8 @@ Wellelev = Felev(WelldataXY(:,1), WelldataXY(:,2))*0.3048; %convert to mm
 %% 
 WelldataXY = [[S.X]' [S.Y]'];
 WelldataQ = [S.Q]';
-WelldataTop = [S.Top]'*0.3048;
-WelldataDepth = Wellelev - WelldataTop;
-WelldataScreenLen = (WelldataTop - [S.Bot]')*0.3048;
+WelldataDepth = [S.Bot]';
+WelldataScreenLen = ([S.Bot]' - [S.Top]')*0.3048;
 %% Bring the basic shapefile
 % Run the first 3 sections of the PrepareGeometryData.m script
 % make a list of the barycenters of the bas shapefile
@@ -75,7 +74,7 @@ for ii = 1:length(bas)
 end
 %}
 %% Calculate the KDE for the density of wells
-f = mvksdensity(WelldataXY,XYbas,'bandwidth',50);
+Welldensity = mvksdensity(WelldataXY,XYbas,'bandwidth',5000);
 %% Compute spatial statistics for each bas point
 % For the density simply find out how many wells there are within the threshold
 
@@ -108,7 +107,20 @@ end
 in = inpolygon(XYtri(:,1), XYtri(:,2),Xout{1,1}, Yout{1,1});
 tri(~in,:) = [];
 %% plot
-trisurf(tri, XYbas(:,1),XYbas(:,2),Welldensity/max(Welldensity),'edgecolor','none')
+Welldensity(Welldensity==0) = min(Welldensity(Welldensity~=0));
+logWellDensity = log10(Welldensity);
+logWellDensity_pos = logWellDensity + abs(min(logWellDensity));
+
+maxV = max(logWellDensity_pos);
+minV = min(logWellDensity_pos);
+Vs   = (logWellDensity_pos - minV) / (maxV - minV);
+clf
+trisurf(tri, XYbas(:,1), XYbas(:,2), Vs, 'edgecolor', 'none')
+hold on
+plot(WelldataXY(:,1), WelldataXY(:,2),'.')
+view(0,90);
+axis equal
+alpha(0.9);
 %% Prepare streams for faster queries
 STRM = readStreams('CVHM_streams.npsat');
 % add bounding box info
