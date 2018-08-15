@@ -58,6 +58,8 @@ for ii = 1:length(bas)
     XYbas(ii,:) = [mean(bas(ii,1).X(1:4)) mean(bas(ii,1).Y(1:4))];
 end
 %}
+%% Calculate the KDE for the density of wells
+f = mvksdensity(WelldataXY,XYbas,'bandwidth',50);
 %% Compute spatial statistics for each bas point
 % For the density simply find out how many wells there are within the threshold
 
