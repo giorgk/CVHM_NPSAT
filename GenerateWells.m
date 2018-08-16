@@ -84,7 +84,7 @@ Felev = griddedInterpolant({Xgrid, Ygrid}, ELEV');
 % Wellelev = Felev(WelldataXY(:,1), WelldataXY(:,2))*0.3048; %convert to mm
 %% 
 WelldataXY = [[Sag.X]' [Sag.Y]'];
-WelldataQ = [Sag.Q]';
+WelldataQ = [Sag.Q]'*5.450992969; %convert to m%3/day
 WelldataDepth = [Sag.Bot]'*0.3048;
 WelldataScreenLen = ([Sag.Bot]' - [Sag.Top]')*0.3048;
 %% Bring the basic shapefile
@@ -115,15 +115,16 @@ logWellDensity_pos = logWellDensity + abs(min(logWellDensity));
 maxV = max(logWellDensity_pos);
 minV = min(logWellDensity_pos);
 Vs   = (logWellDensity_pos - minV) / (maxV - minV);
+FwellDens = scatteredInterpolant(XYbas(:,1), XYbas(:,2), Vs);
 %%  plot density estimation
 clf
-trisurf(tri, XYbas(:,1), XYbas(:,2), WellQstd, 'edgecolor', 'none')
+trisurf(tri, XYbas(:,1), XYbas(:,2), Vs, 'edgecolor', 'none')
 hold on
 plot(WelldataXY(:,1), WelldataXY(:,2),'.')
 view(0,90);
 axis equal
 alpha(1);
-%}
+%
 %% Try distributions to data
 % xtest = WelldataQ;
 % xtest(xtest<=0,:) = [];
@@ -184,7 +185,7 @@ axis equal
 axis off
 title ([stp{tp} ' std']);
 colorbar
-
+%
 %% Prepare streams for faster queries
 STRM = readStreams('CVHM_streams.npsat');
 % add bounding box info
@@ -193,7 +194,7 @@ for ii = 1:length(STRM)
     STRM_bbox(ii,:) = [min(STRM(ii,1).poly(:,1)) max(STRM(ii,1).poly(:,1)) ...
                        min(STRM(ii,1).poly(:,2)) max(STRM(ii,1).poly(:,2))];
 end
-
+%}
 %% ============== Main Algorithm ===============
 %% load/process required data
 warea = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/CVHM_Mesh_inline_buf400.shp');
@@ -216,16 +217,18 @@ for ii = 1:length(wareaX)
         wareaYmax = max(wareaY{ii,1});
     end
 end
-
-TOT_WELL_Q = 0;
+%}
 %% main RUN
+TOT_WELL_Q = 0;
+wellGenXY = nan(100000,5); % X Y T B Q
+cnt_well = 1;
 while TOT_WELL_Q < 28988263.07
     % generate a random point inside the CV bounding box until the point is
     % within CV outline
     while true
         xw = wareaXmin + (wareaXmax - wareaXmin)*rand;
         yw = wareaYmin + (wareaYmax - wareaYmin)*rand;
-        in = inpolgon(xw, yw, wareaX{1,1}, wareaY{1,1});
+        in = inpolygon(xw, yw, wareaX{1,1}, wareaY{1,1});
         if ~in
             continue;
         end
@@ -233,7 +236,7 @@ while TOT_WELL_Q < 28988263.07
         % islands
         point_in_CV = true;
         for ii = 2:length(wareaX)
-            in = inpolgon(xw, yw, wareaX{ii,1}, wareaY{ii,1});
+            in = inpolygon(xw, yw, wareaX{ii,1}, wareaY{ii,1});
             if in
                 point_in_CV = false;
                 break;
@@ -243,6 +246,30 @@ while TOT_WELL_Q < 28988263.07
             break;
         end
     end
+    
+    % next make sure that it's outside of the river polygons
+    id_in = isPoint_inStream([xw yw], STRM, STRM_bbox);
+    if ~isempty(id_in)
+        continue;
+    end
+    
+    % Make sure that its not too close with the already existing
+    % wells
+    if cnt_well ~= 1
+        dst = sqrt((xw - wellGenXY(1:cnt_well-1,1)).^2 + (yw - wellGenXY(1:cnt_well-1,2)).^2);
+        if min(dst) < 200
+            continue;
+        end
+    end
+    
+    % Finally accept the point with a certaint probability
+    rw = FwellDens(xw,yw);
+    r= rand;
+    if r > rw
+        continue;
+    end
+
+    
     
 end
 
