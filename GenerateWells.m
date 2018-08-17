@@ -116,13 +116,16 @@ maxV = max(logWellDensity_pos);
 minV = min(logWellDensity_pos);
 Vs   = (logWellDensity_pos - minV) / (maxV - minV);
 FwellDens = scatteredInterpolant(XYbas(:,1), XYbas(:,2), Vs);
+FwellDens_nrm = scatteredInterpolant(XYbas(:,1), XYbas(:,2), Welldensity/max(Welldensity));
 %%  plot density estimation
 clf
-trisurf(tri, XYbas(:,1), XYbas(:,2), Vs, 'edgecolor', 'none')
-hold on
-plot(WelldataXY(:,1), WelldataXY(:,2),'.')
+u = 0.8;
+trisurf(tri, XYbas(:,1), XYbas(:,2), Vs*u + (1-u)*(Welldensity/max(Welldensity)), 'edgecolor', 'none')
+%hold on
+%plot(WelldataXY(:,1), WelldataXY(:,2),'.')
 view(0,90);
 axis equal
+colorbar
 alpha(1);
 %
 %% Try distributions to data
@@ -155,16 +158,23 @@ for jj = 1:size(XYbas,1)
     wQ = w(id_incQ);
     wSL = w(id_incSL);
     
-    WellQmean(jj,1) = 10^sum(logQ.*(wQ/sum(wQ)));
-    WellQstd(jj,1) = 10^std(logQ,wQ);
+    WellQmean(jj,1) = sum(logQ.*(wQ/sum(wQ)));
+    WellQstd(jj,1) = std(logQ,wQ);
     
-    WellSLmean(jj,1) = 10^sum(logSL.*(wSL/sum(wSL)));
-    WellSLstd(jj,1) = 10^std(logSL,wSL);
+    WellSLmean(jj,1) = sum(logSL.*(wSL/sum(wSL)));
+    WellSLstd(jj,1) = std(logSL,wSL);
     
-    WellDmean(jj,1) = 10^sum(logD.*(w/sum(w)));
-    WellDstd(jj,1) = 10^std(logD,w);
+    WellDmean(jj,1) = sum(logD.*(w/sum(w)));
+    WellDstd(jj,1) = std(logD,w);
     
 end
+%% Create interpolation functions
+FQmean = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellQmean);
+FQstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellQstd);
+FSLmean = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellSLmean);
+FSLstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellSLstd);
+FDmean = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellDmean);
+FDstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellDstd);
 %% plot spatial statistics
 tp = 1;
 stp = {'Q','SL','D'};
@@ -185,7 +195,6 @@ axis equal
 axis off
 title ([stp{tp} ' std']);
 colorbar
-%
 %% Prepare streams for faster queries
 STRM = readStreams('CVHM_streams.npsat');
 % add bounding box info
@@ -194,7 +203,7 @@ for ii = 1:length(STRM)
     STRM_bbox(ii,:) = [min(STRM(ii,1).poly(:,1)) max(STRM(ii,1).poly(:,1)) ...
                        min(STRM(ii,1).poly(:,2)) max(STRM(ii,1).poly(:,2))];
 end
-%}
+%
 %% ============== Main Algorithm ===============
 %% load/process required data
 warea = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/CVHM_Mesh_inline_buf400.shp');
@@ -217,11 +226,22 @@ for ii = 1:length(wareaX)
         wareaYmax = max(wareaY{ii,1});
     end
 end
+% read the initial estimate of the water table
+topelev = read_Scattered('CVHM_top_elev.npsat',2);
+Felev = scatteredInterpolant(topelev.p(:,1),topelev.p(:,2),topelev.v);
+
+botelev = read_Scattered('CVHM_Bot_elev.npsat',2);
+Fbot = scatteredInterpolant(botelev.p(:,1),botelev.p(:,2),botelev.v);
+
 %}
 %% main RUN
 TOT_WELL_Q = 0;
-wellGenXY = nan(100000,5); % X Y T B Q
+wellGen = nan(100000,5); % X Y T B Q
 cnt_well = 1;
+clf
+plot(wareaX{1,1}, wareaY{1,1},'r')
+hold on
+udens = 0.25;
 while TOT_WELL_Q < 28988263.07
     % generate a random point inside the CV bounding box until the point is
     % within CV outline
@@ -255,21 +275,55 @@ while TOT_WELL_Q < 28988263.07
     
     % Make sure that its not too close with the already existing
     % wells
-    if cnt_well ~= 1
-        dst = sqrt((xw - wellGenXY(1:cnt_well-1,1)).^2 + (yw - wellGenXY(1:cnt_well-1,2)).^2);
+    if cnt_well > 1
+        dst = sqrt((xw - wellGen(1:cnt_well-1,1)).^2 + (yw - wellGen(1:cnt_well-1,2)).^2);
         if min(dst) < 200
             continue;
         end
     end
     
     % Finally accept the point with a certaint probability
-    rw = FwellDens(xw,yw);
+    
+    rw = udens * FwellDens(xw,yw) + (1 - udens) * FwellDens_nrm(xw,yw);
     r= rand;
     if r > rw
         continue;
     end
+    
+    % if the well has been accepted so far, assign a random pumping rate
+    Qw = 10^normrnd(FQmean(xw,yw), FQstd(xw,yw))/6;
 
     
     
+    elw = Felev(xw,yw);
+    botw = Fbot(xw,yw);
+    
+    % generate a depth and a screen length that fit inside the domain
+    count_try = 0;
+    add_this_well = false;
+    while true
+        Dw = 10^normrnd(FDmean(xw,yw), FDstd(xw,yw));
+        SLw = 10^normrnd(FSLmean(xw,yw), FSLstd(xw,yw));
+        Bw = elw - Dw;
+        Tw = Bw + SLw;
+        if Tw - botw > 0 && elw - Tw > 0 && Bw - botw > 0 && elw - Bw > 0
+            add_this_well = true;
+            break;
+        end
+        count_try = count_try + 1;
+        if count_try > 100
+            break;
+        end
+    end
+    
+    if add_this_well
+        wellGen(cnt_well,:) = [xw yw Tw Bw Qw];
+        cnt_well = cnt_well + 1;
+        TOT_WELL_Q = TOT_WELL_Q + Qw;
+        title(['N:' num2str(cnt_well-1) ', Q:' num2str(28988263.07 - TOT_WELL_Q) '(' num2str(100*TOT_WELL_Q/28988263.07) ')']);
+        plot(xw,yw,'.b')
+        drawnow
+    end
 end
+wellGen(cnt_well:end,:)=[];
 

@@ -10,6 +10,8 @@ id = find(p(1,1) > STRMbbox(:,1) & p(1,1) < STRMbbox(:,2) & ...
 id_in = [];
 for ii = 1:length(id)
     in = inpolygon(p(1,1), p(1,2), STRM(id(ii),1).poly(:,1), STRM(id(ii),1).poly(:,2));
-    id_in = [id_in; ii];
+    if in
+        id_in = [id_in; ii];
+    end
 end
 
