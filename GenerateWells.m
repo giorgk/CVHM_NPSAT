@@ -127,6 +127,7 @@ view(0,90);
 axis equal
 colorbar
 alpha(1);
+axis off
 %
 %% Try distributions to data
 % xtest = WelldataQ;
@@ -176,7 +177,7 @@ FSLstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellSLstd);
 FDmean = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellDmean);
 FDstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellDstd);
 %% plot spatial statistics
-tp = 1;
+tp = 3;
 stp = {'Q','SL','D'};
 clf
 subplot(1,2,1)
