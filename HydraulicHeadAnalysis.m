@@ -83,6 +83,7 @@ surf(temp,'edgecolor','none')
 view(360,-90)
 %
 %% Assign head values to segments
+timespan = istart:1:iend;
 LNS_IJ = [LNS_IJ nan(size(LNS_IJ,1),2)];
 for ii = 1:size(LNS_IJ, 1) - 1
     r = LNS_IJ(ii,1);
@@ -136,7 +137,7 @@ for ii = 1:size(PNTS,1)-1
     end
 end
 %% Define the number of boundary functions based on the head standard deviation
-std_Htol = 10;
+std_Htol = 50;
 cnt_bnd = 0;
 clear BND_LINES
 next_line = 1;
@@ -164,7 +165,7 @@ BND_LINES(dlt,:) = [];
 fid = fopen('CVHM_BC.npsat','w');
 fprintf(fid, '%d\n', length(BND_LINES));
 for ii = 1:length(BND_LINES)
-    fprintf(fid, 'EDGETOP 0 BC_files/%s\n', ['bndfnc_' num2str(ii) '.npsat\n']);
+    fprintf(fid, 'EDGETOP 0 BC_files/%s\n', ['bndfnc_' num2str(ii) '.npsat']);
     
     fid1 = fopen(['BC_files/bndfnc_' num2str(ii) '.npsat'], 'w');
     fprintf(fid1, 'BOUNDARY_LINE\n');
