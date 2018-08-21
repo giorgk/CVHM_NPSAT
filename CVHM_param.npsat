@@ -138,7 +138,7 @@ subsection F. Sources & Sinks ==================================
   # c----------------------------------
   # Well network
   # The name of a file with the well information
-  set c Wells                = 
+  set c Wells                = CVHM_wells.npsat
 end
 
 

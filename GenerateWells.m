@@ -326,4 +326,13 @@ while TOT_WELL_Q < 28988263.07
     end
 end
 wellGen(cnt_well:end,:)=[];
+%% print wells into file
+load('Generated_wells.mat', 'wellGen25');
+wellGen = wellGen25;
+% Make sure the pumping is negative
+wellGen(:,5) = -wellGen(:,5);
+fid = fopen('CVHM_wells.npsat','w');
+fprintf(fid, '%d\n', size(wellGen, 1));
+fprintf(fid, '%f %f %f %f %f\n', wellGen');
+fclose(fid);
 
