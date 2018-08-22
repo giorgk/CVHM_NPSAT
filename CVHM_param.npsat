@@ -38,7 +38,7 @@ subsection B. Geometry  ========================================
     # If the geometry type is FILE specify the file name
     # that contains the initial mesh.
     # If the type is box this is ignored.
-    set a Input mesh file = CVHM_mesh_test.npsat
+    set a Input mesh file = CVHM_mesh_modif.npsat
   end
 
   subsection C. Common parameters =---=---=---=---=---=---=---
@@ -79,7 +79,7 @@ subsection C. Discretization ===================================
 
   # c----------------------------------
   # The number of initial refinements
-  set c Initial Refinement      = 1
+  set c Initial Refinement      = 0
 
   # d----------------------------------
   # The number of initial refinements around the wells

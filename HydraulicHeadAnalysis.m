@@ -1,8 +1,8 @@
 %% Create a list of lines of the domain outline.
 % For each line find in which cell they correspond
 %
-mesh_outline = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/BAS_active_outline.shp');
-bas = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/BAS_active.shp');
+mesh_outline = shaperead('gis_data/CVHM_Mesh_outline_modif.shp');
+mesh = shaperead('gis_data/CVHM_mesh.shp');
 %% make a list of nodes that describe the boundary of the domain
 % mesh_outline has only one polygon and we split it bellow
 [Xs, Ys] = polysplit(mesh_outline(1,1).X, mesh_outline(1,1).Y);
@@ -14,8 +14,8 @@ end
 %% loop through the edges of the bas and set the ij ids for those that 
 % match the outline segments
 LNS_IJ = nan(size(PNTS,1),2);
-for ii = 1:size(bas,1)
-    [Xs, Ys] = polysplit(bas(ii,1).X, bas(ii,1).Y);
+for ii = 1:size(mesh,1)
+    [Xs, Ys] = polysplit(mesh(ii,1).X, mesh(ii,1).Y);
     for jj = 1:size(Xs,1)
         for k = 1:length(Xs{jj,1})-1
             pa = [Xs{jj,1}(k) Ys{jj,1}(k)];
@@ -31,7 +31,7 @@ for ii = 1:size(bas,1)
                             idmn = min([ida(kk) idb(kkk)]);
                             idmx = max([ida(kk) idb(kkk)]);
                             if idmx - idmn == 1
-                                LNS_IJ(idmn,:) = [bas(ii,1).ROW bas(ii,1).COLUMN_];
+                                LNS_IJ(idmn,:) = [mesh(ii,1).R mesh(ii,1).C];
                             end
                         end
                     end
@@ -172,38 +172,6 @@ for ii = 1:length(BND_LINES)
     fprintf(fid1, '%d %d %f\n', [length(BND_LINES{ii,1}) 1 1]); % Npnts Ndata tolerance
     fprintf(fid1, '%f %f %f\n', PNTS(BND_LINES{ii,1},1:3)');
     fclose(fid1);
-end
-fclose(fid);
-
-%{
-fid = fopen('CVHM_BC.npsat','w');
-
-fprintf(fid, 'EDGETOP 0 bndfnc1.npsat\n');
-fclose(fid);
-
-fid = fopen('bndfnc1.npsat', 'w');
-fprintf(fid, 'BOUNDARY_LINE\n');
-fprintf(fid, '%d %d %f\n', [
-fclose(fid);
-
-%% write the file
-% I have first to implement the line boundary
-fid = fopen('CVHM_BC.npsat','w');
-fprintf(fid, '%d\n', size(LNS,1));
-for ii = 1:size(LNS,1)
-    fprintf(fid, 'EDGETOP 2 BC_files/%s\n', ['cvhm_linebc_' num2str(ii) '.npsat'] );
-    fprintf(fid, '%f %f\n', PNTS(LNS(ii,1),:)); %Pnt_hd(LNS(ii,1),1)
-    fprintf(fid, '%f %f\n', PNTS(LNS(ii,2),:)); %Pnt_hd(LNS(ii,2),1)
-    
-    fid1 = fopen(['BC_files/cvhm_linebc_' num2str(ii) '.npsat'], 'w');
-    fprintf(fid1, 'SCATTERED\n');
-    fprintf(fid1, 'VERT\n');
-    fprintf(fid1, 'STRATIFIED\n');
-    fprintf(fid1, '%d %d\n', [2 1]);
-    fprintf(fid1, '%f %f\n', [0 Pnt_hd(LNS(ii,1),1)]);
-    fprintf(fid1, '%f %f\n', [pdist(PNTS(LNS(ii,:),:)) Pnt_hd(LNS(ii,2),1)]);
-    fclose(fid1);
-    
 end
 fclose(fid);
 

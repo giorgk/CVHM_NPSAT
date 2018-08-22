@@ -71,8 +71,37 @@ for ii = 1:size(msh_el,1)
     %S(ii,1).ND4 = msh_el(ii,4);
 end
 shapewrite(S,'gis_data/CVHM_mesh');
+%% load the modified mesh shapefile
+S = shaperead('gis_data/CVHM_mesh');
+%% Create unique nodes and elements
+msh_nd = [];
+msh_el = [];
+for ii = 1:length(S)
+    el_ids = [];
+    for jj = 1:4
+        Xnd = S(ii,1).X(jj);
+        Ynd = S(ii,1).Y(jj);
+        if isempty(msh_nd)
+            msh_nd = [msh_nd; Xnd Ynd];
+            el_ids = [el_ids 1];
+        else
+            dst = sqrt((msh_nd(:,1) - Xnd).^2 + (msh_nd(:,2) - Ynd).^2);
+            id = find(dst < 0.01);
+            if isempty(id)
+                msh_nd = [msh_nd; Xnd Ynd];
+                el_ids = [el_ids size(msh_nd,1)];
+            else
+                if length(id) > 1
+                    error('More than one nodes are found in the same location');
+                end
+                el_ids = [el_ids id];
+            end 
+        end
+    end
+    msh_el = [msh_el; el_ids];
+end
 %% write mesh file
-writeMeshfile('CVHM_mesh.npsat', msh_nd, msh_el);
+writeMeshfile('CVHM_mesh_modif.npsat', msh_nd, msh_el);
 %}
 %% ================ ELEVATION DATA based on CVHM grid =====================
 % CVHM is divided into 10 layers therefore there are 11 2D grids. However
