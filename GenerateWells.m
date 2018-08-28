@@ -177,7 +177,7 @@ FSLstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellSLstd);
 FDmean = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellDmean);
 FDstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellDstd);
 %% plot spatial statistics
-tp = 3;
+tp = 1;
 stp = {'Q','SL','D'};
 clf
 subplot(1,2,1)
@@ -206,6 +206,7 @@ for ii = 1:length(STRM)
 end
 %
 %% ============== Main Algorithm ===============
+% 10 ft 20ft/day for 100gpm
 %% load/process required data
 warea = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/CVHM_Mesh_inline_buf400.shp');
 [wareaX, wareaY] = polysplit(warea.X, warea.Y);
