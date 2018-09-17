@@ -1,4 +1,4 @@
-%
+%{
 %% Find out the total amount water from groundwater recharge
 rch = read_Scattered( 'CVHM_RCH.npsat', 2);
 % create interpolant
@@ -30,7 +30,8 @@ fprintf('%.2f\n',TOT_RCH + TOTSTRM)
 % At this point the well database should not be distributed, therefore I do
 % not include it in the CVHM repository, but I read it from my local folder
 % ~/Documents/UCDAVIS/CVHM_DATA/WellData
-WellTable = readtable('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/giorgos.csv');
+%WellTable = readtable('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/giorgos.csv');
+%WellTable = readtable('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/RichWellDataV2/dfspcv.csv');
 %% create a shapefile from the table
 for ii = 1:size(WellTable,1)
     S(ii,1).Geometry = 'Point';
@@ -42,12 +43,22 @@ for ii = 1:size(WellTable,1)
     S(ii,1).type = temp{1,1};
     S(ii,1).Top = WellTable.top(ii);
     S(ii,1).Bot = WellTable.bot(ii);
-    S(ii,1).Q = WellTable.WellYield(ii);
+    S(ii,1).depth = WellTable.depth(ii);
+    S(ii,1).Q = WellTable.Q(ii);
 end
+%% OR since Rich created a shapefile why not read it directly
+% bot = depth from land surface to the bottom of the perforated interval [ft]
+% top = depth from land surface to the top of the perforated interval [ft]
+% bot - top is the length of the screened interval
+% Q pumping in gpm
+% year of construction
+
+S = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CV_only_PubAg.shp');
 %% Write shapefile. The coordinate system is EPSG:4326
 shapewrite(S, '/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwelldata');
 %% Create a shapefile with the well data only for the CVHM area.
 S = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVonly_WellData.shp');
+S.Bot = S.bot;
 %% convert well type to id
 % 1 -> 'agriculture'
 % 2 -> 'public'
@@ -84,9 +95,9 @@ Felev = griddedInterpolant({Xgrid, Ygrid}, ELEV');
 % Wellelev = Felev(WelldataXY(:,1), WelldataXY(:,2))*0.3048; %convert to mm
 %% 
 WelldataXY = [[Sag.X]' [Sag.Y]'];
-WelldataQ = [Sag.Q]'*5.450992969; %convert to m%3/day
-WelldataDepth = [Sag.Bot]'*0.3048;
-WelldataScreenLen = ([Sag.Bot]' - [Sag.Top]')*0.3048;
+WelldataQ = [Sag.Q]'*5.450992969; %convert to m^3/day
+WelldataDepth = [Sag.bot]'*0.3048;
+WelldataScreenLen = ([Sag.bot]' - [Sag.top]')*0.3048;
 %% Bring the basic shapefile
 % Run the first 3 sections of the PrepareGeometryData.m script
 % make a list of the barycenters of the bas shapefile
@@ -106,7 +117,7 @@ in = inpolygon(XYtri(:,1), XYtri(:,2),Xout{1,1}, Yout{1,1});
 tri(~in,:) = [];
 
 %% Calculate the KDE for the density of wells
-Welldensity = mvksdensity(WelldataXY,XYbas,'bandwidth',5000);
+Welldensity = mvksdensity(WelldataXY,XYbas,'bandwidth',3000);
 
 Welldensity(Welldensity==0) = min(Welldensity(Welldensity~=0));
 logWellDensity = log10(Welldensity);
@@ -119,7 +130,7 @@ FwellDens = scatteredInterpolant(XYbas(:,1), XYbas(:,2), Vs);
 FwellDens_nrm = scatteredInterpolant(XYbas(:,1), XYbas(:,2), Welldensity/max(Welldensity));
 %%  plot density estimation
 clf
-u = 0.8;
+u = 1;
 trisurf(tri, XYbas(:,1), XYbas(:,2), Vs*u + (1-u)*(Welldensity/max(Welldensity)), 'edgecolor', 'none')
 %hold on
 %plot(WelldataXY(:,1), WelldataXY(:,2),'.')
@@ -128,7 +139,7 @@ axis equal
 colorbar
 alpha(1);
 axis off
-%
+%}
 %% Try distributions to data
 % xtest = WelldataQ;
 % xtest(xtest<=0,:) = [];
@@ -140,9 +151,98 @@ axis off
 % histogram(xtest,'Normalization','pdf')
 % hold on
 % plot(xv,yv, 'r','LineWidth',2)
-%% Compute spatial statistics for each bas point
-% For the density simply find out how many wells there are within the threshold
+%% Compute dependent spatial statistics between Pumping Depth and Screen length
+% find wells with pumping rates
+id_incQ = WelldataQ > 0; % find the records with pumpinh rates
+logQ = log10(WelldataQ(id_incQ)); % isolate and log transform those 
+XY_Q = WelldataXY(id_incQ,:); % extract the XY of those that have Q
+depth = WelldataDepth(id_incQ); % extract the Depth of those that have Q
+SL = WelldataScreenLen(id_incQ); % extract the Screen lenght (SL) of those that have Q
 
+% From the wells that have Q find those that have Depth
+id_incD = depth > 0;
+logD = log10(depth(id_incD)); % extract the depth
+XY_QD = XY_Q(id_incD,:); % extract the XY of the records that have Q and D
+logQ_D = logQ(id_incD); % extract the Q of the records that have Q and D
+SL = SL(id_incD); % extract the SL of the records that have Q and D
+
+% From the wells that have Q and D find those that have SL
+id_incS = SL > 0;
+logS = log10(SL(id_incS)); % extract the SL
+XY_QDS = XY_QD(id_incS,:);  % extract the XY of the records that have Q, D and SL
+logD_S = logD(id_incS); % extract the D of the records that have Q, D and SL
+logQ_DS = logQ_D(id_incS); % extract the Q of the records that have Q, D and SL
+%}
+Thres_init = 5000;
+N = size(XYbas,1);
+cnt_neg = 0;
+for jj = 1:size(XYbas,1)
+    [jj N]
+    % PUMPING
+    dst = sqrt((XYbas(jj,1) - XY_Q(:,1)).^2 + (XYbas(jj,2) - XY_Q(:,2)).^2);
+    w = exp(-(1/Thres_init)*dst );
+    WellQ.mean(jj,1) = sum(logQ.*(w/sum(w)));
+    WellQ.std(jj,1) = std(logQ,w);
+    
+    % DEPTH
+    dst = sqrt((XYbas(jj,1) - XY_QD(:,1)).^2 + (XYbas(jj,2) - XY_QD(:,2)).^2);
+    Thres = Thres_init;
+    while 1
+        w = exp(-(1/Thres)*dst );
+        D_Q_fit = fit(logQ_D,logD, 'poly1', 'Weights',w);
+        ab = coeffvalues(D_Q_fit);
+        if ab(1) < 0
+            Thres = Thres + 5000;
+        else
+            break;
+        end
+        if Thres > 30000
+            cnt_neg = cnt_neg + 1;
+            break;
+        end
+    end
+    ab95 = confint(D_Q_fit);
+    WellD.a(jj,1) = ab(1);
+    WellD.b(jj,1) = ab(2);
+    WellD.a95(jj,1) = ab(1) - ab95(1,1);
+    WellD.b95(jj,1) = ab(2) - ab95(1,2);
+    
+    % SCREEN LENGTH
+    dst = sqrt((XYbas(jj,1) - XY_QDS(:,1)).^2 + (XYbas(jj,2) - XY_QDS(:,2)).^2);
+    Thres = Thres_init;
+    while 1
+        w = exp(-(1/Thres)*dst );
+        SL_QD_fit = fit([logQ_DS, logD_S],logS, 'poly11', 'Weights',w);
+        abc = coeffvalues(SL_QD_fit);
+        if abc(2) < 0 || abc(3) < 0
+            Thres = Thres + 5000;
+        else
+            break;
+        end
+        if Thres > 60000
+            cnt_neg = cnt_neg + 1;
+            break;
+        end
+    end
+    
+    abc95 = confint(SL_QD_fit);
+    WellS.Cx(jj,1) = abc(2);
+    WellS.Cy(jj,1) = abc(3);
+    WellS.C0(jj,1) = abc(1);
+    WellS.Cx95(jj,1) = abc(2) - abc95(1,2);
+    WellS.Cy95(jj,1) = abc(3) - abc95(1,3);
+    WellS.C095(jj,1) = abc(1) - abc95(1,1);
+end
+%% Save the well statics
+save('Well_param_stat','WellQ', 'WellD', 'WellS');
+%% Plot parameters
+figure(1);trisurf(tri, XYbas(:,1), XYbas(:,2), WellS.C0, 'edgecolor', 'none')
+view(0,90);
+axis equal
+axis off
+colorbar
+
+%% Compute spatial statistics for each bas point
 % For the pumping find the weighted mean and weighted standard deviation
 % only nonzero positive Q values will be considered
 id_incQ = WelldataQ > 0;
@@ -153,6 +253,7 @@ logSL = log10(WelldataScreenLen(id_incSL));% log screen length
 logD = log10(WelldataDepth); % log depth
 Thres = 5000;
 for jj = 1:size(XYbas,1)
+    
     dst = sqrt((XYbas(jj,1) - WelldataXY(:,1)).^2 + (XYbas(jj,2) - WelldataXY(:,2)).^2);
     w = exp(-(1/Thres)*dst );
     
