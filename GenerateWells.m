@@ -1,4 +1,4 @@
-%{
+%
 %% Find out the total amount water from groundwater recharge
 rch = read_Scattered( 'CVHM_RCH.npsat', 2);
 % create interpolant
@@ -58,7 +58,6 @@ S = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CV_only_PubAg.s
 shapewrite(S, '/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwelldata');
 %% Create a shapefile with the well data only for the CVHM area.
 S = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVonly_WellData.shp');
-S.Bot = S.bot;
 %% convert well type to id
 % 1 -> 'agriculture'
 % 2 -> 'public'
@@ -139,7 +138,7 @@ axis equal
 colorbar
 alpha(1);
 axis off
-%}
+%
 %% Try distributions to data
 % xtest = WelldataQ;
 % xtest(xtest<=0,:) = [];
@@ -172,7 +171,7 @@ logS = log10(SL(id_incS)); % extract the SL
 XY_QDS = XY_QD(id_incS,:);  % extract the XY of the records that have Q, D and SL
 logD_S = logD(id_incS); % extract the D of the records that have Q, D and SL
 logQ_DS = logQ_D(id_incS); % extract the Q of the records that have Q, D and SL
-%}
+%
 Thres_init = 5000;
 N = size(XYbas,1);
 cnt_neg = 0;
@@ -196,7 +195,7 @@ for jj = 1:size(XYbas,1)
         else
             break;
         end
-        if Thres > 30000
+        if Thres > 3000000
             cnt_neg = cnt_neg + 1;
             break;
         end
@@ -206,6 +205,7 @@ for jj = 1:size(XYbas,1)
     WellD.b(jj,1) = ab(2);
     WellD.a95(jj,1) = ab(1) - ab95(1,1);
     WellD.b95(jj,1) = ab(2) - ab95(1,2);
+    WellD.Thres(jj,1) = Thres;
     
     % SCREEN LENGTH
     dst = sqrt((XYbas(jj,1) - XY_QDS(:,1)).^2 + (XYbas(jj,2) - XY_QDS(:,2)).^2);
@@ -219,7 +219,7 @@ for jj = 1:size(XYbas,1)
         else
             break;
         end
-        if Thres > 60000
+        if Thres > 3000000
             cnt_neg = cnt_neg + 1;
             break;
         end
@@ -232,9 +232,26 @@ for jj = 1:size(XYbas,1)
     WellS.Cx95(jj,1) = abc(2) - abc95(1,2);
     WellS.Cy95(jj,1) = abc(3) - abc95(1,3);
     WellS.C095(jj,1) = abc(1) - abc95(1,1);
+    WellS.Thres(jj,1) = Thres;
 end
 %% Save the well statics
 save('Well_param_stat','WellQ', 'WellD', 'WellS');
+%% Create interpolation functions
+WellQ.Fmean = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellQ.mean);
+WellQ.Fstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellQ.std);
+
+WellD.Fa = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellD.a);
+WellD.Fb = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellD.b);
+WellD.Fa95 = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellD.a95);
+WellD.Fb95 = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellD.b95);
+
+WellS.FC0 = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellS.C0);
+WellS.FCx = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellS.Cx);
+WellS.FCy = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellS.Cy);
+WellS.FC095 = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellS.C095);
+WellS.FCx95 = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellS.Cx95);
+WellS.FCy95 = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellS.Cy95);
+
 %% Plot parameters
 figure(1);trisurf(tri, XYbas(:,1), XYbas(:,2), WellS.C0, 'edgecolor', 'none')
 view(0,90);
@@ -242,41 +259,41 @@ axis equal
 axis off
 colorbar
 
-%% Compute spatial statistics for each bas point
-% For the pumping find the weighted mean and weighted standard deviation
-% only nonzero positive Q values will be considered
-id_incQ = WelldataQ > 0;
-logQ = log10(WelldataQ(id_incQ));
-
-id_incSL = WelldataScreenLen > 0;
-logSL = log10(WelldataScreenLen(id_incSL));% log screen length
-logD = log10(WelldataDepth); % log depth
-Thres = 5000;
-for jj = 1:size(XYbas,1)
-    
-    dst = sqrt((XYbas(jj,1) - WelldataXY(:,1)).^2 + (XYbas(jj,2) - WelldataXY(:,2)).^2);
-    w = exp(-(1/Thres)*dst );
-    
-    wQ = w(id_incQ);
-    wSL = w(id_incSL);
-    
-    WellQmean(jj,1) = sum(logQ.*(wQ/sum(wQ)));
-    WellQstd(jj,1) = std(logQ,wQ);
-    
-    WellSLmean(jj,1) = sum(logSL.*(wSL/sum(wSL)));
-    WellSLstd(jj,1) = std(logSL,wSL);
-    
-    WellDmean(jj,1) = sum(logD.*(w/sum(w)));
-    WellDstd(jj,1) = std(logD,w);
-    
-end
+%% Compute independent spatial statistics for each bas point
+% % % % % For the pumping find the weighted mean and weighted standard deviation
+% % % % % only nonzero positive Q values will be considered
+% % % % id_incQ = WelldataQ > 0;
+% % % % logQ = log10(WelldataQ(id_incQ));
+% % % % 
+% % % % id_incSL = WelldataScreenLen > 0;
+% % % % logSL = log10(WelldataScreenLen(id_incSL));% log screen length
+% % % % logD = log10(WelldataDepth); % log depth
+% % % % Thres = 5000;
+% % % % for jj = 1:size(XYbas,1)
+% % % %     
+% % % %     dst = sqrt((XYbas(jj,1) - WelldataXY(:,1)).^2 + (XYbas(jj,2) - WelldataXY(:,2)).^2);
+% % % %     w = exp(-(1/Thres)*dst );
+% % % %     
+% % % %     wQ = w(id_incQ);
+% % % %     wSL = w(id_incSL);
+% % % %     
+% % % %     WellQmean(jj,1) = sum(logQ.*(wQ/sum(wQ)));
+% % % %     WellQstd(jj,1) = std(logQ,wQ);
+% % % %     
+% % % %     WellSLmean(jj,1) = sum(logSL.*(wSL/sum(wSL)));
+% % % %     WellSLstd(jj,1) = std(logSL,wSL);
+% % % %     
+% % % %     WellDmean(jj,1) = sum(logD.*(w/sum(w)));
+% % % %     WellDstd(jj,1) = std(logD,w);
+% % % %     
+% % % % end
 %% Create interpolation functions
-FQmean = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellQmean);
-FQstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellQstd);
-FSLmean = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellSLmean);
-FSLstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellSLstd);
-FDmean = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellDmean);
-FDstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellDstd);
+% % % % FQmean = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellQmean);
+% % % % FQstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellQstd);
+% % % % FSLmean = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellSLmean);
+% % % % FSLstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellSLstd);
+% % % % FDmean = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellDmean);
+% % % % FDstd = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellDstd);
 %% plot spatial statistics
 tp = 1;
 stp = {'Q','SL','D'};
@@ -297,7 +314,9 @@ axis equal
 axis off
 title ([stp{tp} ' std']);
 colorbar
+%}
 %% Prepare streams for faster queries
+%{
 STRM = readStreams('CVHM_streams.npsat');
 % add bounding box info
 STRM_bbox = nan(length(STRM),4);
@@ -305,7 +324,7 @@ for ii = 1:length(STRM)
     STRM_bbox(ii,:) = [min(STRM(ii,1).poly(:,1)) max(STRM(ii,1).poly(:,1)) ...
                        min(STRM(ii,1).poly(:,2)) max(STRM(ii,1).poly(:,2))];
 end
-%
+%}
 %% ============== Main Algorithm ===============
 % 10 ft 20ft/day for 100gpm
 %% load/process required data
@@ -333,10 +352,11 @@ end
 topelev = read_Scattered('CVHM_top_elev.npsat',2);
 Felev = scatteredInterpolant(topelev.p(:,1),topelev.p(:,2),topelev.v);
 
+% abd the bottom of the aquifer
 botelev = read_Scattered('CVHM_Bot_elev.npsat',2);
 Fbot = scatteredInterpolant(botelev.p(:,1),botelev.p(:,2),botelev.v);
 
-%}
+%
 %% main RUN
 TOT_WELL_Q = 0;
 wellGen = nan(100000,5); % X Y T B Q
@@ -344,7 +364,7 @@ cnt_well = 1;
 clf
 plot(wareaX{1,1}, wareaY{1,1},'r')
 hold on
-udens = 0.25;
+udens = 1;
 while TOT_WELL_Q < 28988263.07
     % generate a random point inside the CV bounding box until the point is
     % within CV outline
@@ -394,8 +414,7 @@ while TOT_WELL_Q < 28988263.07
     end
     
     % if the well has been accepted so far, assign a random pumping rate
-    Qw = 10^normrnd(FQmean(xw,yw), FQstd(xw,yw))/6;
-
+    Qw = 10^normrnd(WellQ.Fmean(xw,yw), WellQ.Fstd(xw,yw))/6;
     
     
     elw = Felev(xw,yw);
@@ -405,8 +424,17 @@ while TOT_WELL_Q < 28988263.07
     count_try = 0;
     add_this_well = false;
     while true
-        Dw = 10^normrnd(FDmean(xw,yw), FDstd(xw,yw));
-        SLw = 10^normrnd(FSLmean(xw,yw), FSLstd(xw,yw));
+        
+        Dmean = WellD.Fa(xw,yw) * log10(Qw) + WellD.Fb(xw,yw);
+        D95 = WellD.Fa95(xw,yw) * log10(Qw) + WellD.Fb95(xw,yw);
+        Dstd = D95/1.96;
+        Dw = 10^normrnd(Dmean, D95);
+        
+        SLmean = WellS.FCx(xw,yw)*log10(Qw) + WellS.FCy(xw,yw)*log10(Dw) + WellS.FC0(xw,yw);
+        SL95 = WellS.FCx95(xw,yw)*log10(Qw) + WellS.FCy95(xw,yw)*log10(Dw) + WellS.FC095(xw,yw);
+        Sstd = SL95/1.96;
+        Sw = 10^normrnd(SLmean, SLstd);
+        
         Bw = elw - Dw;
         Tw = Bw + SLw;
         if Tw - botw > 0 && elw - Tw > 0 && Bw - botw > 0 && elw - Bw > 0
