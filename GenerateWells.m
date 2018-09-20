@@ -129,7 +129,7 @@ FwellDens = scatteredInterpolant(XYbas(:,1), XYbas(:,2), Vs);
 FwellDens_nrm = scatteredInterpolant(XYbas(:,1), XYbas(:,2), Welldensity/max(Welldensity));
 %%  plot density estimation
 clf
-u = 1;
+u = 0;
 trisurf(tri, XYbas(:,1), XYbas(:,2), Vs*u + (1-u)*(Welldensity/max(Welldensity)), 'edgecolor', 'none')
 %hold on
 %plot(WelldataXY(:,1), WelldataXY(:,2),'.')
@@ -466,4 +466,85 @@ fid = fopen('CVHM_wells.npsat','w');
 fprintf(fid, '%d\n', size(wellGen, 1));
 fprintf(fid, '%f %f %f %f %f\n', wellGen');
 fclose(fid);
+
+%% Analysis PLOTS
+CVoutline = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/CVHM_Mesh_outline_modif.shp');
+%% CVallWells
+plot(CVoutline.X,CVoutline.Y,'linewidth',2)
+hold on
+plot([S.X]', [S.Y]','.')
+axis equal
+axis off
+% print -dpng -r600 CVallWells
+%% wells_with_pumping
+Q = [Sag.Q]';
+Q = Q(~isnan(Q));
+XY = [[Sag.X]',[Sag.Y]'];
+XY_Q = XY(~isnan([Sag.Q]'),:);
+subplot(1,2,1);plot(CVoutline.X,CVoutline.Y)
+subplot(1,2,1);hold on
+subplot(1,2,1);plot(XY_Q(:,1), XY_Q(:,2),'.')
+subplot(1,2,1);title('Wells with Pumping rate')
+axis equal
+axis off
+subplot(1,2,2);histogram(Q)
+subplot(1,2,2);xlabel('Well Yield  [gpm]')
+%print -dpng -r600 wells_with_pumping
+%% Wells_with_D_Q
+id = find(~isnan([Sag.Q]') & ~isnan([Sag.depth]'));
+D = [Sag.depth]';
+Q = [Sag.Q]';
+subplot(2,2,[1 3]);hold on
+plot(CVoutline.X,CVoutline.Y,'linewidth',2)
+subplot(1,2,1);plot(XY(id,1), XY(id,2),'.');
+title('Wells with Pumping and Depth');
+axis equal
+axis off
+subplot(2,2,[1 3]);hold off
+subplot(2,2,2);histogram(D);
+subplot(2,2,2);xlabel('Depth [ft]');
+subplot(2,2,2);xlim([0 3000]);
+subplot(2,2,4);plot(Q(id),D(id),'.')
+subplot(2,2,4);hold on
+subplot(2,2,4);xlabel('Pumping rate [gpm]');
+subplot(2,2,4);ylabel('Depth [ft]');
+D_Q_fit = fit(Q(id),D(id), 'poly1');
+ab = coeffvalues(D_Q_fit);
+ci = predint(D_Q_fit,[0 :1000:10000]);
+ab95 = confint(D_Q_fit);
+subplot(2,2,4);plot([0 :1000:10000],[0 :1000:10000].*ab(1) + ab(2),'r','linewidth',2)
+subplot(2,2,4);plot([0 :1000:10000]',ci(:,1),'--r')
+subplot(2,2,4);plot([0 :1000:10000]',ci(:,2),'--r')
+% print -dpng -r600 Wells_with_D_Q
+%% Wells_with_D_Q_SL
+SL = [Sag.bot]' - [Sag.top]';
+id = find(~isnan([Sag.Q]') & ~isnan([Sag.depth]')  & ~isnan(SL));
+SL_D_Q_fit = fit([Q(id),D(id)],SL(id), 'poly11');
+ab = coeffvalues(SL_D_Q_fit);
+[Xg, Yg] = meshgrid(0:2000:10000,0:1000:3000);
+cm = SL_D_Q_fit(reshape(Xg,size(Xg,1)*size(Xg,2),1), reshape(Yg,size(Yg,1)*size(Yg,2),1));
+ci = predint(SL_D_Q_fit,[reshape(Xg,size(Xg,1)*size(Xg,2),1) reshape(Yg,size(Yg,1)*size(Yg,2),1)]);
+
+%%
+clf
+subplot(2,2,[1 3]);hold on
+plot(CVoutline.X,CVoutline.Y,'linewidth',2)
+subplot(1,2,1);plot(XY(id,1), XY(id,2),'.');
+title({'Wells with Pumping, Depth', 'and Screenlength'});
+axis equal
+axis off
+subplot(2,2,2);histogram(SL);
+subplot(2,2,2);xlabel('Screen length [ft]');
+subplot(2,2,2);xlim([0 1000]);
+subplot(2,2,4);plot3(Q(id),D(id),SL(id),'.')
+subplot(2,2,4);hold on
+subplot(2,2,4);xlabel('Pumping rate [gpm]');
+subplot(2,2,4);ylabel('Depth [ft]');
+subplot(2,2,4);zlabel('Screen length [ft]');
+subplot(2,2,4);grid on
+subplot(2,2,4);mesh(Xg,Yg,reshape(cm,size(Xg,1),size(Xg,2)),'EdgeColor','r','FaceColor','none');
+subplot(2,2,4);mesh(Xg,Yg,reshape(ci(:,1),size(Xg,1),size(Xg,2)),'EdgeColor','b','FaceColor','none','LineStyle','-');
+subplot(2,2,4);mesh(Xg,Yg,reshape(ci(:,2),size(Xg,1),size(Xg,2)),'EdgeColor','b','FaceColor','none','LineStyle','-');
+%print -dpng -r600 Wells_with_D_Q_SL
+
 
