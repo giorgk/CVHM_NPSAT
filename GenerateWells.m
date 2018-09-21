@@ -1,4 +1,4 @@
-%
+%{
 %% Find out the total amount water from groundwater recharge
 rch = read_Scattered( 'CVHM_RCH.npsat', 2);
 % create interpolant
@@ -129,7 +129,7 @@ FwellDens = scatteredInterpolant(XYbas(:,1), XYbas(:,2), Vs);
 FwellDens_nrm = scatteredInterpolant(XYbas(:,1), XYbas(:,2), Welldensity/max(Welldensity));
 %%  plot density estimation
 clf
-u = 0;
+u = 1;
 trisurf(tri, XYbas(:,1), XYbas(:,2), Vs*u + (1-u)*(Welldensity/max(Welldensity)), 'edgecolor', 'none')
 %hold on
 %plot(WelldataXY(:,1), WelldataXY(:,2),'.')
@@ -138,7 +138,7 @@ axis equal
 colorbar
 alpha(1);
 axis off
-%
+%}
 %% Try distributions to data
 % xtest = WelldataQ;
 % xtest(xtest<=0,:) = [];
@@ -171,8 +171,12 @@ logS = log10(SL(id_incS)); % extract the SL
 XY_QDS = XY_QD(id_incS,:);  % extract the XY of the records that have Q, D and SL
 logD_S = logD(id_incS); % extract the D of the records that have Q, D and SL
 logQ_DS = logQ_D(id_incS); % extract the Q of the records that have Q, D and SL
+[xg, yg] = meshgrid(0:0.2:5,0:0.2:3);
+xgr = reshape(xg,size(xg,1)*size(xg,2),1);
+ygr = reshape(yg,size(yg,1)*size(yg,2),1);
+
 %
-Thres_init = 5000;
+Thres_init = 10000;
 N = size(XYbas,1);
 cnt_neg = 0;
 for jj = 1:size(XYbas,1)
@@ -200,11 +204,16 @@ for jj = 1:size(XYbas,1)
             break;
         end
     end
+    ci = predint(D_Q_fit,[0:0.1:4]');
+    tempfit=fit([0:0.1:4]',ci(:,1), 'poly1');
+    temptab = coeffvalues(tt);
     ab95 = confint(D_Q_fit);
     WellD.a(jj,1) = ab(1);
     WellD.b(jj,1) = ab(2);
     WellD.a95(jj,1) = ab(1) - ab95(1,1);
     WellD.b95(jj,1) = ab(2) - ab95(1,2);
+    WellD.apred95 = temptab(1);
+    WellD.bpred95 = temptab(2);
     WellD.Thres(jj,1) = Thres;
     
     % SCREEN LENGTH
@@ -253,7 +262,7 @@ WellS.FCx95 = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellS.Cx95);
 WellS.FCy95 = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellS.Cy95);
 
 %% Plot parameters
-figure(1);trisurf(tri, XYbas(:,1), XYbas(:,2), WellS.C0, 'edgecolor', 'none')
+figure(1);trisurf(tri, XYbas(:,1), XYbas(:,2), WellD.Fa(XYbas(:,1), XYbas(:,2)), 'edgecolor', 'none')
 view(0,90);
 axis equal
 axis off
