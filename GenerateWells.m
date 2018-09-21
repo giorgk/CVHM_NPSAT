@@ -206,14 +206,14 @@ for jj = 1:size(XYbas,1)
     end
     ci = predint(D_Q_fit,[0:0.1:4]');
     tempfit=fit([0:0.1:4]',ci(:,1), 'poly1');
-    temptab = coeffvalues(tt);
+    temptab = coeffvalues(tempfit);
     ab95 = confint(D_Q_fit);
     WellD.a(jj,1) = ab(1);
     WellD.b(jj,1) = ab(2);
     WellD.a95(jj,1) = ab(1) - ab95(1,1);
     WellD.b95(jj,1) = ab(2) - ab95(1,2);
-    WellD.apred95 = temptab(1);
-    WellD.bpred95 = temptab(2);
+    WellD.a_p95 = temptab(1) - ab(1);
+    WellD.b_p95 = temptab(2) - ab(2);
     WellD.Thres(jj,1) = Thres;
     
     % SCREEN LENGTH
@@ -233,6 +233,10 @@ for jj = 1:size(XYbas,1)
             break;
         end
     end
+    ci = predint(SL_QD_fit,[xgr, ygr]);
+    tempfit=fit([xgr ygr],ci(:,1), 'poly11');
+    temptab = coeffvalues(tempfit);
+    
     
     abc95 = confint(SL_QD_fit);
     WellS.Cx(jj,1) = abc(2);
@@ -241,6 +245,9 @@ for jj = 1:size(XYbas,1)
     WellS.Cx95(jj,1) = abc(2) - abc95(1,2);
     WellS.Cy95(jj,1) = abc(3) - abc95(1,3);
     WellS.C095(jj,1) = abc(1) - abc95(1,1);
+    WellS.Cx_p95 = temptab(2) - abc(2);
+    WellS.Cy_p95 = temptab(3) - abc(3);
+    WellS.C0_p95 = temptab(1) - abc(1);
     WellS.Thres(jj,1) = Thres;
 end
 %% Save the well statics
