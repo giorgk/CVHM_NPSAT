@@ -1,4 +1,4 @@
-%{
+%
 %% Find out the total amount water from groundwater recharge
 rch = read_Scattered( 'CVHM_RCH.npsat', 2);
 % create interpolant
@@ -152,6 +152,7 @@ axis off
 % plot(xv,yv, 'r','LineWidth',2)
 %% Compute dependent spatial statistics between Pumping Depth and Screen length
 % find wells with pumping rates
+clear WellQ WellD WellS
 id_incQ = WelldataQ > 0; % find the records with pumpinh rates
 logQ = log10(WelldataQ(id_incQ)); % isolate and log transform those 
 XY_Q = WelldataXY(id_incQ,:); % extract the XY of those that have Q
@@ -176,7 +177,7 @@ xgr = reshape(xg,size(xg,1)*size(xg,2),1);
 ygr = reshape(yg,size(yg,1)*size(yg,2),1);
 
 %
-Thres_init = 10000;
+Thres_init = 5000;
 N = size(XYbas,1);
 cnt_neg = 0;
 for jj = 1:size(XYbas,1)
@@ -269,7 +270,7 @@ WellS.FCx95 = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellS.Cx95);
 WellS.FCy95 = scatteredInterpolant(XYbas(:,1), XYbas(:,2), WellS.Cy95);
 
 %% Plot parameters
-figure(1);trisurf(tri, XYbas(:,1), XYbas(:,2), WellD.Fa(XYbas(:,1), XYbas(:,2)), 'edgecolor', 'none')
+figure(1);trisurf(tri, XYbas(:,1), XYbas(:,2), WellD.Fb(XYbas(:,1), XYbas(:,2)), 'edgecolor', 'none')
 view(0,90);
 axis equal
 axis off

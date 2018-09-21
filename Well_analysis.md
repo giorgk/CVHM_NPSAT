@@ -32,14 +32,36 @@ For the pumping rates we used radial basis function interpolation. First we crea
 <img src="pumping_maps.png" alt="Pumping Maps" width="800"/>
 
 #### Relation between well depth and pumping
-Depth is directly related to pumping. Typicaly wells with high pumping rates are more deep. In our analysis we used a simple linear regression model of the form
+Depth is directly related to pumping. Typicaly wells with high pumping rates are deeper. In our analysis we used a simple linear regression model of the form
  
 **D = a*Q+b**
 
-However, there is spatial variability accross Central Valley so that not a single formula can be used. Here for the same grid of points we weighted linear regression to calculate spatialy variable **a(x,y)** and **b(x,y)** slope and interecept. The weights were computed using radial basis functions with 5km radius. Yet, in some cases the data were limited and we increased the radius.
+However, there is spatial variability accross Central Valley so that not a single formula can be used. Here for the same grid of points that were used for pumping we used weighted linear regression to calculate spatialy variable **a(x,y)** and **b(x,y)** slope and interecept. The weights were computed using radial basis functions with 10km and 5 km radius. Yet, in some cases the data were limited and we increased the radius.
 Since both *Q* and *D* are lognormally distributed, the data were first logged transformed. The following maps shows the slope and intecept for 
 **Log(D) = a*Log(Q) + b** .
-<img src="pumping_maps.png" alt="Pumping Maps" width="800"/>
+<img src="D_Q_slope_Inter_R10km.png" alt="Pumping Maps" width="700"/>
+<img src="D_Q_slope_Inter_R5km.png" alt="Pumping Maps" width="700"/>
+Besides slope and intercept we calculated the slode and intercept that correspond to 95 confidence interval prediction.
+
+#### Relation between well Screen length depth and pumping
+In a similar fashion as above we defined a function between well screen, depth and pumping. In particular we used a linear regression model of the form:
+**Log(SL) = cx * Log(Q) + cy * Log(D) + c0**
+For a grid of points we computed the coefficient of this formula as function of **x** and **y**.
+<img src="SL_Q_D_cx_cy_c0_R10km.png" alt="Pumping Maps" width="900"/>
+For each of the coefficients we calculated also those that correspond to 95% confidence interval
+
+## Well generation algorithm
+
+Based on the statistical analysis the Well generation algorithm is as follows:
+
+1. Generate a valid *x* and *y* coordinates. Valid coordinates is any point inside the aquifer and some distance (eg 400 m) from the aquifer boundary. A valid point should be some distance away from the rivers (~400m). Last it shoudn't be too close to any existing well.
+2. The valid well location is accepted based on the probability of the density map. 
+3. Assign Pumping rate **Qw**. Calculate the mean and standard deviation of pumping. Generate a normaly distributed random pumping using the calculated mean and standard deviation. The log Q is back transformed to real units.
+4. Assign Depth **Dw**. For the mean and 95 confidence interval interpolate  the slope and the intercept. Calculate mean and standard deviation depth for the x and y coordinates. Next generate a random normaly distributed depth using the mean depth and standard deviation that was derived from th 95 CI.
+5. Assign Screen length **SLw**. For the mean and 95 confidence interval interpolate  the coefficients of the formula **Log(SL) = cx * Log(Q) + cy * Log(D) + c0**. Using the formula calculate a mean and 95CI SL based on Qw and Dw. Similarly generate a normaly distributed random screen length using the mean and standard deviation.
+6. Make sure that the combination of Depth and Screen length fits inside the aquifer. Compare the Top and bottom of the well screen against the bottom of the aquifer and the initial estimation of the water table.
+7. Additionally make sure that for every 100 gpm there is 10 ft of screen length with conductivity > 20 ft/day.
+8. Repeat until the wells sum up to the desired total pumping. For the current simulation this is 28,988,263.07 m^3/day
 
 
  
