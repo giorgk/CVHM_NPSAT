@@ -28,7 +28,7 @@ To compute the density map for Central Valley we used a Kernel smooth function. 
 <img src="densityMaps.png" alt="Density maps" width="800"/>
 
 #### Spatial variability of pumping capacity
-For the pumping rates we used radial basis function interpolation. First we created a dense grid of points where the pumping rate will be interpolated. For the interpolation we used a weighted average of all wells that have pumping rate. The weight was defined by a radial basis function with 5km radious. In practice wells with distance higher than 5km have 0 weight, while the closer the wells are in the interpolation point the higher the weight. In a similar manner we computed a weighted standard deviation for each interpolation point. Based on the histogram of pumping rates the data are lognormaly distributed, therefore prior to 
+For the pumping rates we used radial basis function interpolation. First we created a dense grid of points where the pumping rate will be interpolated. For the interpolation we used a weighted average of all wells that have pumping rate. The weight was defined by a radial basis function with 5km radious. In practice wells with distance higher than 5km have 0 weight, while the closer the wells are in the interpolation point the higher the weight. In a similar manner we computed a weighted standard deviation for each interpolation point. Based on the histogram of pumping rates the data are lognormaly distributed, therefore prior to any calculations the data were logged transformed.
 <img src="pumping_maps.png" alt="Pumping Maps" width="800"/>
 
 #### Relation between well depth and pumping
