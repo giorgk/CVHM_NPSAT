@@ -63,5 +63,16 @@ Based on the statistical analysis the Well generation algorithm is as follows:
 7. Additionally make sure that for every 100 gpm there is 10 ft of screen length with conductivity > 20 ft/day.
 8. Repeat until the wells sum up to the desired total pumping. For the current simulation this is 28,988,263.07 m^3/day
 
+## Simulated Well analysis
+#### RUN 1
+Results of the first run without tweakings
 
+###### Density
+<img src="Simulated_density_map.png" alt="Pumping Maps" width="400"/> 
+
+###### Pumping rates
+<img src="Simulated_pumping.png" alt="Pumping Maps" width="600"/> 
+
+###### Pumping rates
+<img src="Simulated_screen_length.png" alt="Pumping Maps" width="600"/> 
  

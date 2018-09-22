@@ -138,7 +138,7 @@ axis equal
 colorbar
 alpha(1);
 axis off
-%}
+%
 %% Try distributions to data
 % xtest = WelldataQ;
 % xtest(xtest<=0,:) = [];
@@ -213,8 +213,8 @@ for jj = 1:size(XYbas,1)
     WellD.b(jj,1) = ab(2);
     WellD.a95(jj,1) = ab(1) - ab95(1,1);
     WellD.b95(jj,1) = ab(2) - ab95(1,2);
-    WellD.a_p95 = temptab(1) - ab(1);
-    WellD.b_p95 = temptab(2) - ab(2);
+    WellD.a_p95(jj,1) = temptab(1) - ab(1);
+    WellD.b_p95(jj,1) = temptab(2) - ab(2);
     WellD.Thres(jj,1) = Thres;
     
     % SCREEN LENGTH
@@ -246,9 +246,9 @@ for jj = 1:size(XYbas,1)
     WellS.Cx95(jj,1) = abc(2) - abc95(1,2);
     WellS.Cy95(jj,1) = abc(3) - abc95(1,3);
     WellS.C095(jj,1) = abc(1) - abc95(1,1);
-    WellS.Cx_p95 = temptab(2) - abc(2);
-    WellS.Cy_p95 = temptab(3) - abc(3);
-    WellS.C0_p95 = temptab(1) - abc(1);
+    WellS.Cx_p95(jj,1) = temptab(2) - abc(2);
+    WellS.Cy_p95(jj,1) = temptab(3) - abc(3);
+    WellS.C0_p95(jj,1) = temptab(1) - abc(1);
     WellS.Thres(jj,1) = Thres;
 end
 %% Save the well statics
@@ -449,8 +449,8 @@ while TOT_WELL_Q < 28988263.07
         
         SLmean = WellS.FCx(xw,yw)*log10(Qw) + WellS.FCy(xw,yw)*log10(Dw) + WellS.FC0(xw,yw);
         SL95 = WellS.FCx95(xw,yw)*log10(Qw) + WellS.FCy95(xw,yw)*log10(Dw) + WellS.FC095(xw,yw);
-        Sstd = SL95/1.96;
-        Sw = 10^normrnd(SLmean, SLstd);
+        SLstd = SL95/1.96;
+        SLw = 10^normrnd(SLmean, SLstd);
         
         Bw = elw - Dw;
         Tw = Bw + SLw;
