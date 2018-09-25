@@ -1,4 +1,5 @@
 %% WELL GENERATION ALGORITHM V2 
+%
 % In this version we are going to take into account the pumping 
 % distribution of CVHM and combined information from the well dataset and
 % CVHM model
@@ -53,12 +54,71 @@ end
 Bas = rmfield(Bas, 'grid_active');
 
 CVHM_wells = Bas;
+%% load Well Budgets
+cbcf_path = '/home/giorgk/Documents/UCDAVIS/CVHM_DATA/ClaudiaRun/';
+m=4;y=1961;
+t2=0;
+for ii=1:510
+    if m==13
+        y
+        m = 1;
+        y = y+1;
+    end
+    cnst=floor((ii-1)/10);
+    if t2<cnst*10+1
+        clear OUT
+        load([cbcf_path 'cbcf_' num2str(cnst*10+1) '_' num2str(10*cnst+10) '.mat']);
+        t2=cnst*10+1;
+    end
+    Welldates(ii,1)=y;
+    Welldates(ii,2)=m;
+    FARMWELLS{ii,1} = OUT{ii,1}{10,2};
+    MNWELLS{ii,1} = OUT{ii,1}{9,2};
+    m = m + 1;
+end
+%% OR
+load('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/Well_Budget.mat');
 %% 
-ys = 1977; % year start
-ms = 10; % month start
+yr = 1977; % year start
+mnt = 10; % month start
 ye = 2003; % year end
 me = 2; % month end
-for 
-
-%% load Well Budgets
-load('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/ClaudiaRun/ALLDATA.mat','MNWLS','FRMWLS');
+Ndays = [];
+while 1
+    Ndays = [Ndays; eomday(yr,mnt)];
+    mnt = mnt + 1;
+    if mnt > 12
+        mnt = 1;
+        yr = yr + 1;
+    end
+    if yr == ye && mnt > me
+        break;
+    end
+end
+%}
+%% Average the stresses for the simulation period
+% get istart and iend from GWaterBudget_calc
+iid = istart:iend;
+MNW = zeros(441, 98);
+FRW = zeros(441, 98);
+for ii = 1:length(Ndays)
+    for jj = 1:size(FARMWELLS{iid(ii),1},1)
+        FRW(FARMWELLS{iid(ii),1}(jj,2), FARMWELLS{iid(ii),1}(jj,3)) = ...
+            FRW(FARMWELLS{iid(ii),1}(jj,2), FARMWELLS{iid(ii),1}(jj,3)) + ...
+            FARMWELLS{iid(ii),1}(jj,4)*Ndays(ii,1);
+    end
+    for jj = 1:size(MNWELLS{iid(ii),1},1)
+        MNW(MNWELLS{iid(ii),1}(jj,2), MNWELLS{iid(ii),1}(jj,3)) = ...
+            MNW(MNWELLS{iid(ii),1}(jj,2), MNWELLS{iid(ii),1}(jj,3)) + ...
+            MNWELLS{iid(ii),1}(jj,4)*Ndays(ii,1);
+    end
+end
+FRW = FRW./sum(Ndays);
+MNW = MNW./sum(Ndays);
+%% add the well rates to CVHM_wells shapefiles
+for ii = 1:size(CVHM_wells,1)
+    CVHM_wells(ii,1).farm = FRW(CVHM_wells(ii,1).ROW, CVHM_wells(ii,1).COLUMN_);
+    CVHM_wells(ii,1).mnw = MNW(CVHM_wells(ii,1).ROW, CVHM_wells(ii,1).COLUMN_);
+end
+shapewrite(CVHM_wells, 'gis_data/CVHM_wellBud');
+    
