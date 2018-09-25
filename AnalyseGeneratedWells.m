@@ -14,10 +14,15 @@ colorbar
 alpha(1);
 axis off
 %% Pumping
+histogram(6*wellGen(:,5)/5.450992969400)
+hold on
 histogram(wellGen(:,5)/5.450992969400)
 xlim([0 10000])
 xlabel('Pumping rate [gpm]')
+legend('Initial scalining','Generated')
+
 
 %% Screen length
 histogram((wellGen(:,3)-wellGen(:,4))*3.28084)
 xlabel('Screen length [ft]')
+xlim([0 1000])

@@ -73,6 +73,6 @@ Results of the first run without tweakings
 ###### Pumping rates
 <img src="Simulated_pumping.png" alt="Pumping Maps" width="600"/> 
 
-###### Pumping rates
+###### Screen length
 <img src="Simulated_screen_length.png" alt="Pumping Maps" width="600"/> 
  
