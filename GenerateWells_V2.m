@@ -1,5 +1,5 @@
 %% WELL GENERATION ALGORITHM V2 
-%{
+%
 % In this version we are going to take into account the pumping 
 % distribution of CVHM and combined information from the well dataset and
 % CVHM model
@@ -151,6 +151,7 @@ end
 shapewrite(Farms_poly, 'gis_data/FARMS_polyPump.shp');
 %
 %% Generate Pumping wells
+Farm_basin = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS_poly.shp');
 Farms_poly = shaperead('gis_data/FARMS_polyPump.shp');
 CVHMwells = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwells_30y.shp');
 for ii = 1:length(CVHMwells)
@@ -160,9 +161,15 @@ for ii = 1:length(CVHMwells)
         CVHMwells(ii,1).Itype = 0;
     end
 end
-%}
+%
 %%
+clear WELLS4CVHM
 for ii = 1:length(Farms_poly)
+    if ~isempty(find([0] == Farms_poly(ii,1).dwr_sbrgns,1))
+        continue;
+    end
+        
+    display(['Farm: ' num2str(Farms_poly(ii,1).dwr_sbrgns)])
     in_wells = inpolygon([CVHMwells.X]',[CVHMwells.Y]', ...
                          Farms_poly(ii,1).X, Farms_poly(ii,1).Y);
                      
@@ -174,25 +181,46 @@ for ii = 1:length(Farms_poly)
     tempWag = tempW(iag,1);
     tempWag_mod = tempWag;
     tempWpb_mod = tempWpb;
+                     
+    if Farms_poly(ii,1).dwr_sbrgns == 19
+        % For the 19th farm use the information from 20 and 21
+        in_wells = false(length(CVHMwells),1);
+        for kk = 1:length(Farms_poly)
+            if ~isempty(find([19 20 21] == Farms_poly(kk,1).dwr_sbrgns,1))
+                in_wells(inpolygon([CVHMwells.X]',[CVHMwells.Y]', ...
+                         Farms_poly(kk,1).X, Farms_poly(kk,1).Y)) = true;
+            end
+        end
+    end
+    tempW = CVHMwells(in_wells,1);
+     
+    ipub = find([tempW.Itype]'==1);
+    iag = find([tempW.Itype]'==0);
+    tempWpb = tempW(ipub,1);
+    tempWag = tempW(iag,1);
+   
 
     % ----------AG wells --------
     %%% PUMPING
-    idQ = ~isnan([tempWag.Q]); % isolate the records that have pumping
+    idQ = ~isnan([tempWag.Q]') & [tempWag.Q]' > 0; % isolate the records that have pumping
+    display(sum(idQ))
     [f, x]=ecdf([tempWag(idQ,1).Q]'); % create an ECDF based on the data
     % generate random pumping based on the ECDF 
-    for jj = 1:length(tempWag)
-        if isnan(tempWag(jj,1).Q)
+    for jj = 1:length(tempWag_mod)
+        if isnan(tempWag_mod(jj,1).Q)
              tempWag_mod(jj,1).Q = interp1q(f,x,rand);
         end
     end
     
     %%% DEPTH
     % isolate the records that have pumping and depth
-    idQD = ~isnan([tempWag.Q]) & ~isnan([tempWag.depth]);
+    idQD = ~isnan([tempWag.Q]') & [tempWag.Q]' > 0 & ...
+           ~isnan([tempWag.depth]') & [tempWag.depth]' > 0;
+    display(sum(idQD))
     QD_fit = fit(log10([tempWag(idQD,1).Q]'),log10([tempWag(idQD,1).depth]'), 'poly1');
     % generate random depth if depth is missing
-    for jj = 1:length(tempWag)
-        if isnan(tempWag(jj,1).depth)
+    for jj = 1:length(tempWag_mod)
+        if isnan(tempWag_mod(jj,1).depth)
             Dm = QD_fit(log10(tempWag_mod(jj,1).Q));
             Ds = predint(QD_fit, log10(tempWag_mod(jj,1).Q),0.68,'observation','off');
             tempWag_mod(jj,1).depth = 10^normrnd(Dm, Dm-Ds(1));
@@ -201,40 +229,63 @@ for ii = 1:length(Farms_poly)
     
     %%% SCREEN LENGTH
     % isolate the records that have pumping and depth and screen length
-    idQDS = ~isnan([tempWag.Q]) & ~isnan([tempWag.depth]) & ...
-            ~isnan([tempWag.top]) & ~isnan([tempWag.bot]);
-        
+    idQDS = ~isnan([tempWag.Q]') & [tempWag.Q]' > 0 & ...
+            ~isnan([tempWag.depth]') & [tempWag.depth]' > 0 & ...
+            ~isnan([tempWag.top]') & ~isnan([tempWag.bot]') & ...
+            [tempWag.bot]' - [tempWag.top]' > 0;
+    display(sum(idQDS))    
     QDS_fit=fit([log10([tempWag(idQDS,1).Q]'), log10([tempWag(idQDS,1).depth]')], ...
         log10([tempWag(idQDS,1).bot]' - [tempWag(idQDS,1).top]'), 'poly11');
-    for jj = 1:length(tempWag)
-        if isnan([tempWag(jj,1).top]) || isnan([tempWag(jj,1).bot])
+    for jj = 1:length(tempWag_mod)
+        if isnan([tempWag_mod(jj,1).top]) || isnan([tempWag_mod(jj,1).bot])
             Sm = QDS_fit(log10([tempWag_mod(jj,1).Q]'), log10([tempWag_mod(jj,1).depth]'));
             Ss = predint(QDS_fit, [log10([tempWag_mod(jj,1).Q]'), log10([tempWag_mod(jj,1).depth]')],0.68,'observation','off');
             tempWag_mod(jj,1).SL = 10^normrnd(Sm, Sm-Ss(1));
         else
-            tempWag_mod(jj,1).SL = tempWag(jj,1).bot - tempWag(jj,1).top;
+            tempWag_mod(jj,1).SL = tempWag_mod(jj,1).bot - tempWag_mod(jj,1).top;
         end
     end
     
     % --------------- Urban wells-------------
     %%% PUMPING
-    idQ = ~isnan([tempWpb.Q]); % isolate the records that have pumping
+    idQ = ~isnan([tempWpb.Q]') & [tempWpb.Q]' > 0; % isolate the records that have pumping
+    display(sum(idQ))
+    if sum(idQ) < 10
+        % use all public records that belong to basin
+        ibas = Farm_basin(ii,1).Basins;
+        in_basin = false(length(CVHMwells),1);
+        for kk = 1:length(Farm_basin)
+            if Farm_basin(kk,1).Basins ~= ibas
+                continue;
+            end
+            in_basin(inpolygon([CVHMwells.X]',[CVHMwells.Y]', ...
+                         Farm_basin(kk,1).X, Farm_basin(kk,1).Y)) = true;
+        end
+        tempWbas = CVHMwells(in_basin,1);
+        ipub = find([tempWbas.Itype]'==1);
+        tempWpb = tempWbas(ipub,1);
+        idQ = ~isnan([tempWpb.Q]') & [tempWpb.Q]' > 0;
+        display(sum(idQ))
+    end
+    
     [f, x]=ecdf([tempWpb(idQ,1).Q]'); % create an ECDF based on the data
     % generate random pumping based on the ECDF 
-    for jj = 1:length(tempWpb)
-        if isnan(tempWpb(jj,1).Q)
+    for jj = 1:length(tempWpb_mod)
+        if isnan(tempWpb_mod(jj,1).Q)
              tempWpb_mod(jj,1).Q = interp1q(f,x,rand);
         end
     end
     
     %%% DEPTH
     % isolate the records that have pumping and depth
-    idQD = ~isnan([tempWpb.Q]) & ~isnan([tempWpb.depth]);
+    idQD = ~isnan([tempWpb.Q]') & [tempWpb.Q]' > 0 & ...
+           ~isnan([tempWpb.depth]') & [tempWpb.depth]' > 0;
+    display(sum(idQD))
     QD_fit = fit(log10([tempWpb(idQD,1).Q]'),log10([tempWpb(idQD,1).depth]'), 'poly1');
     % generate random depth if depth is missing
-    for jj = 1:length(tempWpb)
-        if isnan(tempWpb(jj,1).depth)
-            Dm = QD_fit(log10(tempWpb(jj,1).Q));
+    for jj = 1:length(tempWpb_mod)
+        if isnan(tempWpb_mod(jj,1).depth)
+            Dm = QD_fit(log10(tempWpb_mod(jj,1).Q));
             Ds = predint(QD_fit, log10(tempWpb_mod(jj,1).Q),0.68,'observation','off');
             tempWpb_mod(jj,1).depth = 10^normrnd(Dm, Dm-Ds(1));
         end
@@ -242,19 +293,60 @@ for ii = 1:length(Farms_poly)
     
     %%% SCREEN LENGTH
     % isolate the records that have pumping and depth and screen length
-    idQDS = ~isnan([tempWpb.Q]) & ~isnan([tempWpb.depth]) & ...
-            ~isnan([tempWpb.top]) & ~isnan([tempWpb.bot]);
-        
+    idQDS = ~isnan([tempWpb.Q]') & [tempWpb.Q]' > 0 & ...
+            ~isnan([tempWpb.depth]') & [tempWpb.depth]' > 0 & ...
+            ~isnan([tempWpb.top]') & ~isnan([tempWpb.bot]') & ...
+            [tempWpb.bot]' - [tempWpb.top]' > 0;
+    display(sum(idQDS))    
     QDS_fit=fit([log10([tempWpb(idQDS,1).Q]'), log10([tempWpb(idQDS,1).depth]')], ...
         log10([tempWpb(idQDS,1).bot]' - [tempWpb(idQDS,1).top]'), 'poly11');
-    for jj = 1:length(tempWpb)
-        if isnan([tempWpb(jj,1).top]) || isnan([tempWpb(jj,1).bot])
+    for jj = 1:length(tempWpb_mod)
+        if isnan([tempWpb_mod(jj,1).top]) || isnan([tempWpb_mod(jj,1).bot])
             Sm = QDS_fit(log10([tempWpb_mod(jj,1).Q]'), log10([tempWpb_mod(jj,1).depth]'));
             Ss = predint(QDS_fit, [log10([tempWpb_mod(jj,1).Q]'), log10([tempWpb_mod(jj,1).depth]')],0.68,'observation','off');
             tempWpb_mod(jj,1).SL = 10^normrnd(Sm, Sm-Ss(1));
         else
-            tempWpb_mod(jj,1).SL = tempWpb(jj,1).bot - tempWpb(jj,1).top;
+            tempWpb_mod(jj,1).SL = tempWpb_mod(jj,1).bot - tempWpb_mod(jj,1).top;
         end
     end
     
+    WELLS4CVHM(ii,1).farm_id = Farms_poly(ii,1).dwr_sbrgns;
+    WELLS4CVHM(ii,1).UrbanPump = Farms_poly(ii,1).UrbanPump;
+    WELLS4CVHM(ii,1).AgPump = Farms_poly(ii,1).AgPump;
+    WELLS4CVHM(ii,1).Pubwells = tempWpb_mod;
+    WELLS4CVHM(ii,1).Agwells = tempWag_mod;
+    WELLS4CVHM(ii,1).Npb = length(tempWpb_mod);
+    WELLS4CVHM(ii,1).Nag = length(tempWag_mod);
+end
+WELLS4CVHM(17,:) = [];
+%}
+%% Scale the pumping rates to match the desired pumping
+Total_pump_vol = 28988263.07; %m^3/day
+init_vol = abs(sum([WELLS4CVHM.UrbanPump]')) + abs(sum([WELLS4CVHM.AgPump]'));
+for ii = 1:length(WELLS4CVHM)
+    
+    urb_perc = abs(WELLS4CVHM(ii,1).UrbanPump) / init_vol;
+    ag_perc = abs(WELLS4CVHM(ii,1).AgPump) / init_vol;
+    
+    urb_act = Total_pump_vol*urb_perc;
+    ag_act = Total_pump_vol*ag_perc;
+    
+    Q_init = [WELLS4CVHM(ii,1).Pubwells.Q]';
+    Q_perc = Q_init/sum(Q_init);
+    for jj = 1:length(Q_perc)
+        WELLS4CVHM(ii,1).Pubwells(jj,1).Q_act = urb_act*Q_perc(jj);
+    end
+    
+    Q_init = [WELLS4CVHM(ii,1).Agwells.Q]';
+    Q_perc = Q_init/sum(Q_init);
+    for jj = 1:length(Q_perc)
+        WELLS4CVHM(ii,1).Agwells(jj,1).Q_act = ag_act*Q_perc(jj);
+    end
+end
+%% Check total volume
+Q_ag = 0;
+Q_pb = 0;
+for ii = 1:length(WELLS4CVHM)
+    Q_ag = Q_ag + sum([WELLS4CVHM(ii,1).Agwells.Q_act]);
+    Q_pb = Q_pb + sum([WELLS4CVHM(ii,1).Pubwells.Q_act]);
 end
