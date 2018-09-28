@@ -5,25 +5,25 @@
   <evaluateDefaultValues active="0"/>
   <layer-tree-group expanded="1" checked="Qt::PartiallyChecked" name="">
     <customproperties/>
-    <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="FARMS_polyPump20180926011202311" source="/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS_polyPump.shp" name="FARMS_polyPump">
+    <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="FARMS_polyPump20180926011202311" source="/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS_polyPump.shp" name="FARMS_polyPump">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Unchecked" id="CVwells_30y20180925233644351" source="/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwells_30y.shp" name="CVwells_30y">
+    <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Unchecked" id="CVwells_30y_proj20180928031014520" source="/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwells_30y_proj.shp" name="CVwells_30y_proj">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Unchecked" id="FARMS_poly20180925234139039" source="/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS_poly.shp" name="FARMS_poly">
+    <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="FARMS_poly20180925234139039" source="/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS_poly.shp" name="FARMS_poly">
       <customproperties/>
     </layer-tree-layer>
     <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Unchecked" id="CVHM_wellBud20180925234043430" source="/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/CVHM_wellBud.shp" name="CVHM_wellBud-MNW">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Unchecked" id="CVHM_wellBud_FARM_copy20180926001028580" source="/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/CVHM_wellBud.shp" name="CVHM_wellBud-FARM copy">
+    <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="CVHM_wellBud_FARM_copy20180926001028580" source="/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/CVHM_wellBud.shp" name="CVHM_wellBud-FARM copy">
       <customproperties/>
     </layer-tree-layer>
     <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="FMP20180924235235199" source="/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FMP.shp" name="FMP">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" providerKey="wms" checked="Qt::Unchecked" id="Google_Satelite20180925015800660" source="crs=EPSG:3857&amp;format=&amp;type=xyz&amp;url=https://mt1.google.com/vt/lyrs%3Ds%26x%3D%7Bx%7D%26y%3D%7By%7D%26z%3D%7Bz%7D" name="Google Satelite">
+    <layer-tree-layer expanded="1" providerKey="wms" checked="Qt::Checked" id="Google_Satelite20180925015800660" source="crs=EPSG:3857&amp;format=&amp;type=xyz&amp;url=https://mt1.google.com/vt/lyrs%3Ds%26x%3D%7Bx%7D%26y%3D%7By%7D%26z%3D%7Bz%7D" name="Google Satelite">
       <customproperties/>
     </layer-tree-layer>
   </layer-tree-group>
@@ -31,10 +31,10 @@
   <mapcanvas>
     <units>meters</units>
     <extent>
-      <xmin>-120356.20754582644440234</xmin>
-      <ymin>1312147.02300590462982655</ymin>
-      <xmax>139803.23980656231287867</xmax>
-      <ymax>1675337.47470750845968723</ymax>
+      <xmin>-163599.83579543634550646</xmin>
+      <ymin>1356405.36217142408713698</ymin>
+      <xmax>96559.61155697303183842</xmax>
+      <ymax>1719595.81387354200705886</ymax>
     </extent>
     <rotation>0</rotation>
     <projections>1</projections>
@@ -56,6 +56,7 @@
       <layer_coordinate_transform destAuthId="USER:100000" srcAuthId="USER:100000" srcDatumTransform="-1" destDatumTransform="-1" layerid="CVHM_wellBud20180925234043430"/>
       <layer_coordinate_transform destAuthId="USER:100000" srcAuthId="USER:100000" srcDatumTransform="-1" destDatumTransform="-1" layerid="Dissolved20180925001759108"/>
       <layer_coordinate_transform destAuthId="USER:100000" srcAuthId="USER:100000" srcDatumTransform="-1" destDatumTransform="-1" layerid="CV_only_PubAg20180925233621607"/>
+      <layer_coordinate_transform destAuthId="USER:100000" srcAuthId="USER:100000" srcDatumTransform="-1" destDatumTransform="-1" layerid="CVwells_30y_proj20180928031014520"/>
       <layer_coordinate_transform destAuthId="USER:100000" srcAuthId="USER:100000" srcDatumTransform="-1" destDatumTransform="-1" layerid="FMP20180924235235199"/>
       <layer_coordinate_transform destAuthId="USER:100000" srcAuthId="USER:100000" srcDatumTransform="-1" destDatumTransform="-1" layerid="CVHM_wellBud_FARM_copy20180926001028580"/>
       <layer_coordinate_transform destAuthId="USER:100000" srcAuthId="USER:100000" srcDatumTransform="-1" destDatumTransform="-1" layerid="FMP_copy20180925001608811"/>
@@ -72,27 +73,27 @@
     <custom-order enabled="0">
       <item>FMP20180924235235199</item>
       <item>Google_Satelite20180925015800660</item>
-      <item>CVwells_30y20180925233644351</item>
       <item>CVHM_wellBud20180925234043430</item>
       <item>FARMS_poly20180925234139039</item>
       <item>CVHM_wellBud_FARM_copy20180926001028580</item>
       <item>FARMS_polyPump20180926011202311</item>
+      <item>CVwells_30y_proj20180928031014520</item>
     </custom-order>
   </layer-tree-canvas>
   <legend updateDrawingOrder="true">
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="FARMS_polyPump" showFeatureCount="0">
-      <filegroup open="true" hidden="false">
+    <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="FARMS_polyPump" showFeatureCount="0">
+      <filegroup open="false" hidden="false">
         <legendlayerfile isInOverview="0" layerid="FARMS_polyPump20180926011202311" visible="1"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="CVwells_30y" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="CVwells_30y_proj" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="CVwells_30y20180925233644351" visible="0"/>
+        <legendlayerfile isInOverview="0" layerid="CVwells_30y_proj20180928031014520" visible="0"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="FARMS_poly" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="FARMS_poly" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="FARMS_poly20180925234139039" visible="0"/>
+        <legendlayerfile isInOverview="0" layerid="FARMS_poly20180925234139039" visible="1"/>
       </filegroup>
     </legendlayer>
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="CVHM_wellBud-MNW" showFeatureCount="0">
@@ -100,9 +101,9 @@
         <legendlayerfile isInOverview="0" layerid="CVHM_wellBud20180925234043430" visible="0"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="CVHM_wellBud-FARM copy" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="CVHM_wellBud-FARM copy" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="CVHM_wellBud_FARM_copy20180926001028580" visible="0"/>
+        <legendlayerfile isInOverview="0" layerid="CVHM_wellBud_FARM_copy20180926001028580" visible="1"/>
       </filegroup>
     </legendlayer>
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="FMP" showFeatureCount="0">
@@ -110,9 +111,9 @@
         <legendlayerfile isInOverview="0" layerid="FMP20180924235235199" visible="1"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Unchecked" name="Google Satelite" showFeatureCount="0">
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="Google Satelite" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="Google_Satelite20180925015800660" visible="0"/>
+        <legendlayerfile isInOverview="0" layerid="Google_Satelite20180925015800660" visible="1"/>
       </filegroup>
     </legendlayer>
   </legend>
@@ -176,6 +177,54 @@
         <Extent ymin="1543290.73053735820576549" xmin="-203240.0369199329870753" ymax="1876090.73087681410834193" xmax="7959.96329549097663403"/>
         <LayerSet/>
         <Grid/>
+        <ComposerMapGrid rightAnnotationDirection="0" gridFramePenColor="0,0,0,255" show="0" bottomAnnotationPosition="1" annotationPrecision="3" showAnnotation="0" topFrameDivisions="0" uuid="{5a44c9ad-0f0b-41ae-a11d-e39bbb56f3f4}" leftAnnotationDirection="0" topAnnotationPosition="1" rightAnnotationDisplay="0" offsetX="0" offsetY="0" rightFrameDivisions="0" gridStyle="0" annotationFontColor="0,0,0,255" intervalX="0" gridFrameSideFlags="15" intervalY="0" bottomAnnotationDirection="0" leftAnnotationDisplay="0" leftFrameDivisions="0" frameFillColor1="255,255,255,255" annotationExpression="" frameFillColor2="0,0,0,255" crossLength="3" gridFramePenThickness="0.5" bottomAnnotationDisplay="0" unit="0" topAnnotationDisplay="0" leftAnnotationPosition="1" blendMode="0" gridFrameStyle="0" rightAnnotationPosition="1" gridFrameWidth="2" name="Grid 1" annotationFormat="0" bottomFrameDivisions="0" topAnnotationDirection="0" frameAnnotationDistance="1">
+          <lineStyle>
+            <symbol alpha="1" clip_to_extent="1" type="line" name="">
+              <layer pass="0" class="SimpleLine" locked="0">
+                <prop k="capstyle" v="square"/>
+                <prop k="customdash" v="5;2"/>
+                <prop k="customdash_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="customdash_unit" v="MM"/>
+                <prop k="draw_inside_polygon" v="0"/>
+                <prop k="joinstyle" v="bevel"/>
+                <prop k="line_color" v="0,0,0,255"/>
+                <prop k="line_style" v="solid"/>
+                <prop k="line_width" v="0"/>
+                <prop k="line_width_unit" v="MM"/>
+                <prop k="offset" v="0"/>
+                <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="offset_unit" v="MM"/>
+                <prop k="use_custom_dash" v="0"/>
+                <prop k="width_map_unit_scale" v="0,0,0,0,0,0"/>
+              </layer>
+            </symbol>
+          </lineStyle>
+          <markerStyle>
+            <symbol alpha="1" clip_to_extent="1" type="marker" name="">
+              <layer pass="0" class="SimpleMarker" locked="0">
+                <prop k="angle" v="0"/>
+                <prop k="color" v="0,0,0,255"/>
+                <prop k="horizontal_anchor_point" v="1"/>
+                <prop k="joinstyle" v="bevel"/>
+                <prop k="name" v="circle"/>
+                <prop k="offset" v="0,0"/>
+                <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="offset_unit" v="MM"/>
+                <prop k="outline_color" v="0,0,0,255"/>
+                <prop k="outline_style" v="solid"/>
+                <prop k="outline_width" v="0"/>
+                <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="outline_width_unit" v="MM"/>
+                <prop k="scale_method" v="diameter"/>
+                <prop k="size" v="2"/>
+                <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="size_unit" v="MM"/>
+                <prop k="vertical_anchor_point" v="1"/>
+              </layer>
+            </symbol>
+          </markerStyle>
+          <annotationFontProperties description="Ubuntu,11,-1,5,50,0,0,0,0,0" style=""/>
+        </ComposerMapGrid>
         <AtlasMap scalingMode="2" atlasDriven="0" margin="0.10000000000000001"/>
         <ComposerItem pagey="1" page="1" id="" lastValidViewScaleFactor="3.9492" positionMode="0" positionLock="false" x="92" y="1" visibility="0" zValue="3" background="false" transparency="0" frameJoinStyle="miter" blendMode="0" width="132" outlineWidth="0.3" excludeFromExports="0" uuid="{7b9357e6-d9eb-49cc-bb3c-399cbdf32172}" height="208" itemRotation="0" frame="false" pagex="92">
           <FrameColor alpha="255" red="0" blue="0" green="0"/>
@@ -184,7 +233,7 @@
         </ComposerItem>
       </ComposerMap>
       <ComposerMap followPreset="false" mapRotation="0" keepLayerSet="true" followPresetName="" id="0" previewMode="Cache" drawCanvasItems="true">
-        <Extent ymin="1316740.07937648356892169" xmin="-174857.66839071892900392" ymax="1652406.0524796792306006" xmax="250742.33204339304938912"/>
+        <Extent ymin="1316740.07937648356892169" xmin="-174857.66839071892900392" ymax="1652405.67602329608052969" xmax="250742.33204339304938912"/>
         <LayerSet>
           <Layer provider="ogr" source="/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS_polyPump.shp" name="FARMS_polyPump">FARMS_polyPump20180926011202311</Layer>
           <Layer provider="ogr" source="/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FMP.shp" name="FMP">FMP20180924235235199</Layer>
@@ -919,6 +968,54 @@ def my_form_open(dialog, layer, feature):
           </LayerStyle>
         </LayerStyles>
         <Grid/>
+        <ComposerMapGrid rightAnnotationDirection="0" gridFramePenColor="0,0,0,255" show="0" bottomAnnotationPosition="1" annotationPrecision="3" showAnnotation="0" topFrameDivisions="0" uuid="{083e4372-d159-4cfb-b9fd-d85ed5db137a}" leftAnnotationDirection="0" topAnnotationPosition="1" rightAnnotationDisplay="0" offsetX="0" offsetY="0" rightFrameDivisions="0" gridStyle="0" annotationFontColor="0,0,0,255" intervalX="0" gridFrameSideFlags="15" intervalY="0" bottomAnnotationDirection="0" leftAnnotationDisplay="0" leftFrameDivisions="0" frameFillColor1="255,255,255,255" annotationExpression="" frameFillColor2="0,0,0,255" crossLength="3" gridFramePenThickness="0.5" bottomAnnotationDisplay="0" unit="0" topAnnotationDisplay="0" leftAnnotationPosition="1" blendMode="0" gridFrameStyle="0" rightAnnotationPosition="1" gridFrameWidth="2" name="Grid 1" annotationFormat="0" bottomFrameDivisions="0" topAnnotationDirection="0" frameAnnotationDistance="1">
+          <lineStyle>
+            <symbol alpha="1" clip_to_extent="1" type="line" name="">
+              <layer pass="0" class="SimpleLine" locked="0">
+                <prop k="capstyle" v="square"/>
+                <prop k="customdash" v="5;2"/>
+                <prop k="customdash_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="customdash_unit" v="MM"/>
+                <prop k="draw_inside_polygon" v="0"/>
+                <prop k="joinstyle" v="bevel"/>
+                <prop k="line_color" v="0,0,0,255"/>
+                <prop k="line_style" v="solid"/>
+                <prop k="line_width" v="0"/>
+                <prop k="line_width_unit" v="MM"/>
+                <prop k="offset" v="0"/>
+                <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="offset_unit" v="MM"/>
+                <prop k="use_custom_dash" v="0"/>
+                <prop k="width_map_unit_scale" v="0,0,0,0,0,0"/>
+              </layer>
+            </symbol>
+          </lineStyle>
+          <markerStyle>
+            <symbol alpha="1" clip_to_extent="1" type="marker" name="">
+              <layer pass="0" class="SimpleMarker" locked="0">
+                <prop k="angle" v="0"/>
+                <prop k="color" v="0,0,0,255"/>
+                <prop k="horizontal_anchor_point" v="1"/>
+                <prop k="joinstyle" v="bevel"/>
+                <prop k="name" v="circle"/>
+                <prop k="offset" v="0,0"/>
+                <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="offset_unit" v="MM"/>
+                <prop k="outline_color" v="0,0,0,255"/>
+                <prop k="outline_style" v="solid"/>
+                <prop k="outline_width" v="0"/>
+                <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="outline_width_unit" v="MM"/>
+                <prop k="scale_method" v="diameter"/>
+                <prop k="size" v="2"/>
+                <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="size_unit" v="MM"/>
+                <prop k="vertical_anchor_point" v="1"/>
+              </layer>
+            </symbol>
+          </markerStyle>
+          <annotationFontProperties description="Ubuntu,11,-1,5,50,0,0,0,0,0" style=""/>
+        </ComposerMapGrid>
         <AtlasMap scalingMode="2" atlasDriven="0" margin="0.10000000000000001"/>
         <ComposerItem pagey="-1.46057e-14" page="1" id="" lastValidViewScaleFactor="3.9492" positionMode="0" positionLock="false" x="30.7353" y="-1.46057e-14" visibility="1" zValue="2" background="false" transparency="0" frameJoinStyle="miter" blendMode="0" width="266.265" outlineWidth="0.3" excludeFromExports="0" uuid="{af9cabc6-df71-4ae1-94a8-9aa7e1e3ad97}" height="210" itemRotation="0" frame="false" pagex="30.7353">
           <FrameColor alpha="255" red="0" blue="0" green="0"/>
@@ -1662,6 +1759,54 @@ def my_form_open(dialog, layer, feature):
           </LayerStyle>
         </LayerStyles>
         <Grid/>
+        <ComposerMapGrid rightAnnotationDirection="0" gridFramePenColor="0,0,0,255" show="0" bottomAnnotationPosition="1" annotationPrecision="3" showAnnotation="0" topFrameDivisions="0" uuid="{847aafb9-d196-41a6-ba71-edcb0c847941}" leftAnnotationDirection="0" topAnnotationPosition="1" rightAnnotationDisplay="0" offsetX="0" offsetY="0" rightFrameDivisions="0" gridStyle="0" annotationFontColor="0,0,0,255" intervalX="0" gridFrameSideFlags="15" intervalY="0" bottomAnnotationDirection="0" leftAnnotationDisplay="0" leftFrameDivisions="0" frameFillColor1="255,255,255,255" annotationExpression="" frameFillColor2="0,0,0,255" crossLength="3" gridFramePenThickness="0.5" bottomAnnotationDisplay="0" unit="0" topAnnotationDisplay="0" leftAnnotationPosition="1" blendMode="0" gridFrameStyle="0" rightAnnotationPosition="1" gridFrameWidth="2" name="Grid 1" annotationFormat="0" bottomFrameDivisions="0" topAnnotationDirection="0" frameAnnotationDistance="1">
+          <lineStyle>
+            <symbol alpha="1" clip_to_extent="1" type="line" name="">
+              <layer pass="0" class="SimpleLine" locked="0">
+                <prop k="capstyle" v="square"/>
+                <prop k="customdash" v="5;2"/>
+                <prop k="customdash_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="customdash_unit" v="MM"/>
+                <prop k="draw_inside_polygon" v="0"/>
+                <prop k="joinstyle" v="bevel"/>
+                <prop k="line_color" v="0,0,0,255"/>
+                <prop k="line_style" v="solid"/>
+                <prop k="line_width" v="0"/>
+                <prop k="line_width_unit" v="MM"/>
+                <prop k="offset" v="0"/>
+                <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="offset_unit" v="MM"/>
+                <prop k="use_custom_dash" v="0"/>
+                <prop k="width_map_unit_scale" v="0,0,0,0,0,0"/>
+              </layer>
+            </symbol>
+          </lineStyle>
+          <markerStyle>
+            <symbol alpha="1" clip_to_extent="1" type="marker" name="">
+              <layer pass="0" class="SimpleMarker" locked="0">
+                <prop k="angle" v="0"/>
+                <prop k="color" v="0,0,0,255"/>
+                <prop k="horizontal_anchor_point" v="1"/>
+                <prop k="joinstyle" v="bevel"/>
+                <prop k="name" v="circle"/>
+                <prop k="offset" v="0,0"/>
+                <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="offset_unit" v="MM"/>
+                <prop k="outline_color" v="0,0,0,255"/>
+                <prop k="outline_style" v="solid"/>
+                <prop k="outline_width" v="0"/>
+                <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="outline_width_unit" v="MM"/>
+                <prop k="scale_method" v="diameter"/>
+                <prop k="size" v="2"/>
+                <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
+                <prop k="size_unit" v="MM"/>
+                <prop k="vertical_anchor_point" v="1"/>
+              </layer>
+            </symbol>
+          </markerStyle>
+          <annotationFontProperties description="Ubuntu,11,-1,5,50,0,0,0,0,0" style=""/>
+        </ComposerMapGrid>
         <AtlasMap scalingMode="2" atlasDriven="0" margin="0.10000000000000001"/>
         <ComposerItem pagey="0" page="1" id="" lastValidViewScaleFactor="3.9492" positionMode="0" positionLock="false" x="0" y="0" visibility="1" zValue="1" background="false" transparency="0" frameJoinStyle="miter" blendMode="0" width="149" outlineWidth="0.3" excludeFromExports="0" uuid="{19a6a4cc-dff2-4620-981c-2d0add75bcf3}" height="209" itemRotation="0" frame="false" pagex="0">
           <FrameColor alpha="255" red="0" blue="0" green="0"/>
@@ -2550,12 +2695,12 @@ def my_form_open(dialog, layer, feature):
       <previewExpression></previewExpression>
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" readOnly="0" geometry="Point" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
-      <id>CVwells_30y20180925233644351</id>
-      <datasource>../../CVHM_DATA/WellData/CVwells_30y.shp</datasource>
+      <id>CVwells_30y_proj20180928031014520</id>
+      <datasource>../../CVHM_DATA/WellData/CVwells_30y_proj.shp</datasource>
       <keywordList>
         <value></value>
       </keywordList>
-      <layername>CVwells_30y</layername>
+      <layername>CVwells_30y_proj</layername>
       <srs>
         <spatialrefsys>
           <proj4>+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-120 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs</proj4>
@@ -2579,19 +2724,10 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="WCRNumber">
           <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="lat">
-          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="lon">
-          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="top">
           <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="bot">
-          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="type">
           <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="depth">
@@ -2603,12 +2739,18 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="Q">
           <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
         </edittype>
+        <edittype widgetv2type="TextEdit" name="type">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="method">
+          <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
+        </edittype>
       </edittypes>
       <renderer-v2 attr="type" forceraster="0" symbollevels="0" type="categorizedSymbol" enableorderby="0">
         <categories>
-          <category render="true" symbol="0" value="agriculture" label="agriculture"/>
-          <category render="true" symbol="1" value="public" label="public"/>
-          <category render="false" symbol="2" value="" label=""/>
+          <category render="true" symbol="0" value="0" label="Agricultural"/>
+          <category render="true" symbol="1" value="1" label="Public"/>
+          <category render="true" symbol="2" value="" label=""/>
         </categories>
         <symbols>
           <symbol alpha="1" clip_to_extent="1" type="marker" name="0">
@@ -2622,7 +2764,7 @@ def my_form_open(dialog, layer, feature):
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
               <prop k="outline_color" v="51,160,44,255"/>
-              <prop k="outline_style" v="solid"/>
+              <prop k="outline_style" v="no"/>
               <prop k="outline_width" v="0"/>
               <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="outline_width_unit" v="MM"/>
@@ -2644,7 +2786,7 @@ def my_form_open(dialog, layer, feature):
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
               <prop k="outline_color" v="227,26,28,255"/>
-              <prop k="outline_style" v="solid"/>
+              <prop k="outline_style" v="no"/>
               <prop k="outline_width" v="0"/>
               <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="outline_width_unit" v="MM"/>
@@ -2658,7 +2800,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="marker" name="2">
             <layer pass="0" class="SimpleMarker" locked="0">
               <prop k="angle" v="0"/>
-              <prop k="color" v="69,202,136,255"/>
+              <prop k="color" v="56,206,181,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="name" v="circle"/>
@@ -2682,7 +2824,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="marker" name="0">
             <layer pass="0" class="SimpleMarker" locked="0">
               <prop k="angle" v="0"/>
-              <prop k="color" v="9,158,188,255"/>
+              <prop k="color" v="105,217,214,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="name" v="circle"/>
@@ -2906,29 +3048,27 @@ def my_form_open(dialog, layer, feature):
       <annotationform>.</annotationform>
       <aliases>
         <alias field="WCRNumber" index="0" name=""/>
-        <alias field="lat" index="1" name=""/>
-        <alias field="lon" index="2" name=""/>
-        <alias field="top" index="3" name=""/>
-        <alias field="bot" index="4" name=""/>
-        <alias field="type" index="5" name=""/>
-        <alias field="depth" index="6" name=""/>
-        <alias field="year" index="7" name=""/>
-        <alias field="Q" index="8" name=""/>
+        <alias field="top" index="1" name=""/>
+        <alias field="bot" index="2" name=""/>
+        <alias field="depth" index="3" name=""/>
+        <alias field="year" index="4" name=""/>
+        <alias field="Q" index="5" name=""/>
+        <alias field="type" index="6" name=""/>
+        <alias field="method" index="7" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
       <attributeactions default="-1"/>
-      <attributetableconfig actionWidgetStyle="dropDown" sortExpression="&quot;type&quot;" sortOrder="0">
+      <attributetableconfig actionWidgetStyle="dropDown" sortExpression="" sortOrder="0">
         <columns>
           <column width="-1" hidden="0" type="field" name="WCRNumber"/>
-          <column width="-1" hidden="0" type="field" name="lat"/>
-          <column width="-1" hidden="0" type="field" name="lon"/>
           <column width="-1" hidden="0" type="field" name="top"/>
           <column width="-1" hidden="0" type="field" name="bot"/>
-          <column width="-1" hidden="0" type="field" name="type"/>
           <column width="-1" hidden="0" type="field" name="depth"/>
           <column width="-1" hidden="0" type="field" name="year"/>
           <column width="-1" hidden="0" type="field" name="Q"/>
+          <column width="-1" hidden="0" type="field" name="type"/>
+          <column width="-1" hidden="0" type="field" name="method"/>
           <column width="-1" hidden="1" type="actions"/>
         </columns>
       </attributetableconfig>
@@ -2962,16 +3102,15 @@ def my_form_open(dialog, layer, feature):
       </conditionalstyles>
       <defaults>
         <default field="WCRNumber" expression=""/>
-        <default field="lat" expression=""/>
-        <default field="lon" expression=""/>
         <default field="top" expression=""/>
         <default field="bot" expression=""/>
-        <default field="type" expression=""/>
         <default field="depth" expression=""/>
         <default field="year" expression=""/>
         <default field="Q" expression=""/>
+        <default field="type" expression=""/>
+        <default field="method" expression=""/>
       </defaults>
-      <previewExpression>COALESCE( "WCRNumber", '&lt;NULL>' )</previewExpression>
+      <previewExpression></previewExpression>
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" readOnly="0" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <id>FARMS_poly20180925234139039</id>
@@ -4150,12 +4289,14 @@ def my_form_open(dialog, layer, feature):
       <DefaultSnapToleranceUnit type="int">2</DefaultSnapToleranceUnit>
       <LayerSnappingList type="QStringList">
         <value>CVHM_wellBud20180925234043430</value>
-        <value>CVwells_30y20180925233644351</value>
-        <value>FARMS_poly20180925234139039</value>
-        <value>FMP20180924235235199</value>
         <value>CVHM_wellBud_FARM_copy20180926001028580</value>
+        <value>FARMS_poly20180925234139039</value>
+        <value>FARMS_polyPump20180926011202311</value>
+        <value>FMP20180924235235199</value>
+        <value>CVwells_30y_proj20180928031014520</value>
       </LayerSnappingList>
       <LayerSnappingEnabledList type="QStringList">
+        <value>disabled</value>
         <value>disabled</value>
         <value>disabled</value>
         <value>disabled</value>
@@ -4170,8 +4311,10 @@ def my_form_open(dialog, layer, feature):
         <value>2</value>
         <value>2</value>
         <value>2</value>
+        <value>2</value>
       </LayerSnappingToleranceUnitList>
       <LayerSnapToList type="QStringList">
+        <value>to_vertex_and_segment</value>
         <value>to_vertex_and_segment</value>
         <value>to_vertex_and_segment</value>
         <value>to_vertex_and_segment</value>
@@ -4181,6 +4324,7 @@ def my_form_open(dialog, layer, feature):
       <DefaultSnapType type="QString">off</DefaultSnapType>
       <DefaultSnapTolerance type="double">0</DefaultSnapTolerance>
       <LayerSnappingToleranceList type="QStringList">
+        <value>0.000000</value>
         <value>0.000000</value>
         <value>0.000000</value>
         <value>0.000000</value>
