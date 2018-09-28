@@ -1,5 +1,5 @@
 %% WELL GENERATION ALGORITHM V2 
-%
+%{
 % In this version we are going to take into account the pumping 
 % distribution of CVHM and combined information from the well dataset and
 % CVHM model
@@ -9,7 +9,39 @@
 % bot - top is the length of the screened interval
 % Q pumping in gpm
 % year of construction
-S = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CV_only_PubAg.shp');
+% S = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CV_only_PubAg.shp');
+S = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVpbAG_mth.shp');
+%% Process well data set
+WellTable = readtable('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/giorgos_with_method_ll.csv');
+%% Create shapefile from the table
+for ii = 1:size(WellTable,1)
+    S(ii,1).Geometry = 'Point';
+    S(ii,1).X = WellTable.lon(ii,1);
+    S(ii,1).Y = WellTable.lat(ii,1);
+    S(ii,1).WCRNumber = cell2mat(WellTable.WCRNumber(ii,1));
+    S(ii,1).top = str2double(cell2mat(WellTable.top(ii,1)));
+    S(ii,1).bot = str2double(cell2mat(WellTable.bot(ii,1)));
+    S(ii,1).depth = str2double(cell2mat(WellTable.depth(ii,1)));
+    S(ii,1).year = str2double(cell2mat(WellTable.year(ii,1)));
+    S(ii,1).Q = str2double(cell2mat(WellTable.Q(ii,1)));
+    S(ii,1).type = str2double(cell2mat(WellTable.type(ii,1)));
+    if strcmp(cell2mat(WellTable.type(ii,1)), 'agriculture')
+        S(ii,1).type = 0;
+    elseif strcmp(cell2mat(WellTable.type(ii,1)), 'public')
+        S(ii,1).type = 1;
+    else
+        S(ii,1).type = -9;
+    end
+    
+    if strcmp(cell2mat(WellTable.MethodofDeterminationLL(ii,1)), 'Derived from Address') || ...
+           strcmp(cell2mat(WellTable.MethodofDeterminationLL(ii,1)), 'GPS')
+        S(ii,1).method = 0;
+    else
+        S(ii,1).method = 1;
+    end
+    
+end
+shapewrite(S, '/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVpbAG_mth');
 %% Well Age analysis
 % discard the wells without year of construction.
 % discard prehistoric and other old wells prior to 1900
@@ -40,6 +72,8 @@ id_dlt = [S.year]' < 2018 - age_thres;
 Sact = S;
 Sact(id_dlt,:) = [];
 plot([Sact.X]',[Sact.Y]','.')
+axis equal
+axis off
 %% save to local shapefile.
 shapewrite(Sact, '/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwells_30y')
 %% CVHM WELL PUMPING
@@ -153,15 +187,8 @@ shapewrite(Farms_poly, 'gis_data/FARMS_polyPump.shp');
 %% Generate Pumping wells
 Farm_basin = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS_poly.shp');
 Farms_poly = shaperead('gis_data/FARMS_polyPump.shp');
-CVHMwells = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwells_30y.shp');
-for ii = 1:length(CVHMwells)
-    if strcmp(CVHMwells(ii,1).type,'public')
-        CVHMwells(ii,1).Itype = 1;
-    else
-        CVHMwells(ii,1).Itype = 0;
-    end
-end
-%
+CVHMwells = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwells_30y_proj.shp');
+%}
 %%
 clear WELLS4CVHM
 for ii = 1:length(Farms_poly)
@@ -175,8 +202,8 @@ for ii = 1:length(Farms_poly)
                      
     tempW = CVHMwells(in_wells,1);
      
-    ipub = find([tempW.Itype]'==1);
-    iag = find([tempW.Itype]'==0);
+    ipub = find([tempW.type]'==1);
+    iag = find([tempW.type]'==0);
     tempWpb = tempW(ipub,1);
     tempWag = tempW(iag,1);
     tempWag_mod = tempWag;
@@ -191,13 +218,14 @@ for ii = 1:length(Farms_poly)
                          Farms_poly(kk,1).X, Farms_poly(kk,1).Y)) = true;
             end
         end
-    end
-    tempW = CVHMwells(in_wells,1);
+        tempW = CVHMwells(in_wells,1);
      
-    ipub = find([tempW.Itype]'==1);
-    iag = find([tempW.Itype]'==0);
-    tempWpb = tempW(ipub,1);
-    tempWag = tempW(iag,1);
+        ipub = find([tempW.Itype]'==1);
+        iag = find([tempW.Itype]'==0);
+        tempWpb = tempW(ipub,1);
+        tempWag = tempW(iag,1);
+    end
+    
    
 
     % ----------AG wells --------
