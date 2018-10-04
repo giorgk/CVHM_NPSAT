@@ -188,7 +188,7 @@ shapewrite(Farms_poly, 'gis_data/FARMS_polyPump.shp');
 Farm_basin = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS_poly.shp');
 Farms_poly = shaperead('gis_data/FARMS_polyPump.shp');
 CVHMwells = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwells_30y_proj.shp');
-%}
+%
 %%
 clear WELLS4CVHM
 for ii = 1:length(Farms_poly)
@@ -220,8 +220,8 @@ for ii = 1:length(Farms_poly)
         end
         tempW = CVHMwells(in_wells,1);
      
-        ipub = find([tempW.Itype]'==1);
-        iag = find([tempW.Itype]'==0);
+        ipub = find([tempW.type]'==1);
+        iag = find([tempW.type]'==0);
         tempWpb = tempW(ipub,1);
         tempWag = tempW(iag,1);
     end
@@ -236,7 +236,7 @@ for ii = 1:length(Farms_poly)
     % generate random pumping based on the ECDF 
     for jj = 1:length(tempWag_mod)
         if isnan(tempWag_mod(jj,1).Q)
-             tempWag_mod(jj,1).Q = interp1q(f,x,rand);
+             tempWag_mod(jj,1).Q = round(interp1q(f,x,rand));
         end
     end
     
@@ -251,7 +251,7 @@ for ii = 1:length(Farms_poly)
         if isnan(tempWag_mod(jj,1).depth)
             Dm = QD_fit(log10(tempWag_mod(jj,1).Q));
             Ds = predint(QD_fit, log10(tempWag_mod(jj,1).Q),0.68,'observation','off');
-            tempWag_mod(jj,1).depth = 10^normrnd(Dm, Dm-Ds(1));
+            tempWag_mod(jj,1).depth = round(10^normrnd(Dm, Dm-Ds(1)));
         end
     end
     
@@ -268,9 +268,9 @@ for ii = 1:length(Farms_poly)
         if isnan([tempWag_mod(jj,1).top]) || isnan([tempWag_mod(jj,1).bot])
             Sm = QDS_fit(log10([tempWag_mod(jj,1).Q]'), log10([tempWag_mod(jj,1).depth]'));
             Ss = predint(QDS_fit, [log10([tempWag_mod(jj,1).Q]'), log10([tempWag_mod(jj,1).depth]')],0.68,'observation','off');
-            tempWag_mod(jj,1).SL = 10^normrnd(Sm, Sm-Ss(1));
+            tempWag_mod(jj,1).SL = round(10^normrnd(Sm, Sm-Ss(1)));
         else
-            tempWag_mod(jj,1).SL = tempWag_mod(jj,1).bot - tempWag_mod(jj,1).top;
+            tempWag_mod(jj,1).SL = round(tempWag_mod(jj,1).bot - tempWag_mod(jj,1).top);
         end
     end
     
@@ -290,7 +290,7 @@ for ii = 1:length(Farms_poly)
                          Farm_basin(kk,1).X, Farm_basin(kk,1).Y)) = true;
         end
         tempWbas = CVHMwells(in_basin,1);
-        ipub = find([tempWbas.Itype]'==1);
+        ipub = find([tempWbas.type]'==1);
         tempWpb = tempWbas(ipub,1);
         idQ = ~isnan([tempWpb.Q]') & [tempWpb.Q]' > 0;
         display(sum(idQ))
@@ -300,7 +300,7 @@ for ii = 1:length(Farms_poly)
     % generate random pumping based on the ECDF 
     for jj = 1:length(tempWpb_mod)
         if isnan(tempWpb_mod(jj,1).Q)
-             tempWpb_mod(jj,1).Q = interp1q(f,x,rand);
+             tempWpb_mod(jj,1).Q = round(interp1q(f,x,rand));
         end
     end
     
@@ -315,7 +315,7 @@ for ii = 1:length(Farms_poly)
         if isnan(tempWpb_mod(jj,1).depth)
             Dm = QD_fit(log10(tempWpb_mod(jj,1).Q));
             Ds = predint(QD_fit, log10(tempWpb_mod(jj,1).Q),0.68,'observation','off');
-            tempWpb_mod(jj,1).depth = 10^normrnd(Dm, Dm-Ds(1));
+            tempWpb_mod(jj,1).depth = round(10^normrnd(Dm, Dm-Ds(1)));
         end
     end
     
@@ -332,9 +332,9 @@ for ii = 1:length(Farms_poly)
         if isnan([tempWpb_mod(jj,1).top]) || isnan([tempWpb_mod(jj,1).bot])
             Sm = QDS_fit(log10([tempWpb_mod(jj,1).Q]'), log10([tempWpb_mod(jj,1).depth]'));
             Ss = predint(QDS_fit, [log10([tempWpb_mod(jj,1).Q]'), log10([tempWpb_mod(jj,1).depth]')],0.68,'observation','off');
-            tempWpb_mod(jj,1).SL = 10^normrnd(Sm, Sm-Ss(1));
+            tempWpb_mod(jj,1).SL = round(10^normrnd(Sm, Sm-Ss(1)));
         else
-            tempWpb_mod(jj,1).SL = tempWpb_mod(jj,1).bot - tempWpb_mod(jj,1).top;
+            tempWpb_mod(jj,1).SL = round(tempWpb_mod(jj,1).bot - tempWpb_mod(jj,1).top);
         end
     end
     
@@ -347,7 +347,7 @@ for ii = 1:length(Farms_poly)
     WELLS4CVHM(ii,1).Nag = length(tempWag_mod);
 end
 WELLS4CVHM(17,:) = [];
-%}
+%
 %% Scale the pumping rates to match the desired pumping
 Total_pump_vol = 28988263.07; %m^3/day
 init_vol = abs(sum([WELLS4CVHM.UrbanPump]')) + abs(sum([WELLS4CVHM.AgPump]'));
@@ -378,3 +378,145 @@ for ii = 1:length(WELLS4CVHM)
     Q_ag = Q_ag + sum([WELLS4CVHM(ii,1).Agwells.Q_act]);
     Q_pb = Q_pb + sum([WELLS4CVHM(ii,1).Pubwells.Q_act]);
 end
+%% Assign top and bottom according to the artificial elevation and CVHM bottom
+topelev = read_Scattered('CVHM_top_elev.npsat',2);
+Ftop = scatteredInterpolant(topelev.p(:,1),topelev.p(:,2),topelev.v);
+
+% abd the bottom of the aquifer
+botelev = read_Scattered('CVHM_Bot_elev.npsat',2);
+Fbot = scatteredInterpolant(botelev.p(:,1),botelev.p(:,2),botelev.v);
+%% 
+cnvrs = 0.3048;
+for ii = 1:length(WELLS4CVHM)
+    for jj = 1:length(WELLS4CVHM(ii,1).Agwells)
+        Wt = Ftop(WELLS4CVHM(ii,1).Agwells(jj,1).X, WELLS4CVHM(ii,1).Agwells(jj,1).Y);
+        Bs = Fbot(WELLS4CVHM(ii,1).Agwells(jj,1).X, WELLS4CVHM(ii,1).Agwells(jj,1).Y);
+        botw = Wt - WELLS4CVHM(ii,1).Agwells(jj,1).depth*cnvrs; % bottom = top - depth
+        topw = Wt - ( WELLS4CVHM(ii,1).Agwells(jj,1).depth - WELLS4CVHM(ii,1).Agwells(jj,1).SL)*cnvrs;
+        
+        WELLS4CVHM(ii,1).Agwells(jj,1).Wt = Wt; 
+        WELLS4CVHM(ii,1).Agwells(jj,1).Bs = Bs;
+        WELLS4CVHM(ii,1).Agwells(jj,1).bot_act = botw;
+        WELLS4CVHM(ii,1).Agwells(jj,1).top_act = topw;
+    end
+    
+    for jj = 1:length(WELLS4CVHM(ii,1).Pubwells)
+        Wt = Ftop(WELLS4CVHM(ii,1).Pubwells(jj,1).X, WELLS4CVHM(ii,1).Pubwells(jj,1).Y);
+        Bs = Fbot(WELLS4CVHM(ii,1).Pubwells(jj,1).X, WELLS4CVHM(ii,1).Pubwells(jj,1).Y);
+        botw = Wt - WELLS4CVHM(ii,1).Pubwells(jj,1).depth*cnvrs; % bottom = top - depth
+        topw = Wt - ( WELLS4CVHM(ii,1).Pubwells(jj,1).depth - WELLS4CVHM(ii,1).Pubwells(jj,1).SL)*cnvrs;
+        
+        WELLS4CVHM(ii,1).Pubwells(jj,1).Wt = Wt; 
+        WELLS4CVHM(ii,1).Pubwells(jj,1).Bs = Bs;
+        WELLS4CVHM(ii,1).Pubwells(jj,1).bot_act = botw;
+        WELLS4CVHM(ii,1).Pubwells(jj,1).top_act = topw;
+    end
+    
+end
+%% Put it all in one variable table
+WW = [];
+for ii = 1:size(WELLS4CVHM,1)
+    WW = [WW; [WELLS4CVHM(ii,1).Agwells.X]' ...
+              [WELLS4CVHM(ii,1).Agwells.Y]' ...
+              [WELLS4CVHM(ii,1).Agwells.top_act]' ...
+              [WELLS4CVHM(ii,1).Agwells.bot_act]' ...
+              [WELLS4CVHM(ii,1).Agwells.Q_act]' ...
+              [WELLS4CVHM(ii,1).Agwells.Wt]' ...
+              [WELLS4CVHM(ii,1).Agwells.Bs]'];
+    WW = [WW; [WELLS4CVHM(ii,1).Pubwells.X]' ...
+              [WELLS4CVHM(ii,1).Pubwells.Y]' ...
+              [WELLS4CVHM(ii,1).Pubwells.top_act]' ...
+              [WELLS4CVHM(ii,1).Pubwells.bot_act]' ...
+              [WELLS4CVHM(ii,1).Pubwells.Q_act]' ...
+              [WELLS4CVHM(ii,1).Pubwells.Wt]' ...
+              [WELLS4CVHM(ii,1).Pubwells.Bs]'];
+end
+%% Correct the wells with 
+find(WW(:,4) < WW(:,7))
+%% This will change for every random run
+temp_sl = WW(466,3) - WW(466,4);
+temp_mean = (WW(466,6) + WW(466,7))/2; 
+WW(466,3) = temp_mean - temp_sl/2;
+WW(466,4) = temp_mean + temp_sl/2;
+%}
+%% Randomize locations
+WW = WW_bck;
+for ii = 1:size(WW,1)
+    ii
+    c = sqrt((WW(:,1) - WW(ii,1)).^2 + (WW(:,2) - WW(ii,2)).^2);
+    id = find(c < 400);
+    if length(id) > 1
+        xm = WW(ii,1);
+        ym = WW(ii,2);
+        for jj = 1:length(id)
+            cnt = 0;
+            thres = 400;
+            while 1
+                xr = xm - 600 + (xm + 600 - (xm - 600))*rand;
+                yr = ym - 600 + (ym + 600 - (ym - 600))*rand;
+                if jj == 1
+                    WW(id(jj),1) = xr;
+                    WW(id(jj),2) = yr;
+                    break;
+                else
+                    dst = sqrt((WW(id(1:jj-1),1) - xr).^2 + (WW(id(1:jj-1),2)- yr).^2);
+                    if min(dst) > thres
+                        WW(id(jj),1) = xr;
+                        WW(id(jj),2) = yr;
+                        break;
+                    end
+                end
+                cnt = cnt + 1;
+                if cnt > 10
+                    thres = thres - 10;
+                    thres
+                    cnt = 0;
+                end
+            end
+        end
+    end
+end
+%% check minimum distances
+for ii = 1:size(WW,1)
+    tii = setdiff([1:size(WW,1)]',ii);
+    mindst(ii,1) = min(sqrt((WW(tii,1) - WW(ii,1)).^2 + (WW(tii,2) - WW(ii,2)).^2));
+end
+%}
+%% relocate wells that are closer than 400 m
+[c d] = sort(mindst);
+for ii = 1:length(c)
+    ii
+    if c(ii) > 400
+        break;
+    end
+    tii = setdiff([1:size(WW,1)]',d(ii));
+    xc = WW(d(ii),1);
+    yc = WW(d(ii),2);
+    radius = 10;
+    cnt = 0;
+    while 1
+        % pick a random direction and a random radius
+        r_rad = radius*rand;
+        tr = 2*pi*rand;
+        xr = xc + r_rad*cos(tr);
+        yr = yc + r_rad*sin(tr);
+        
+        dst = min(sqrt((WW(tii,1) - xr).^2 + (WW(tii,2) - yr).^2));
+        if dst > 400
+            WW(d(ii),1) = xr;
+            WW(d(ii),2) = yr;
+            break;
+        end
+        cnt = cnt + 1;
+        if cnt > 100
+            radius = radius + 10;
+            cnt = 0;
+        end
+    end
+end
+
+%% Print to file
+fid = fopen('CVHM_wells.npsat','w');
+fprintf(fid, '%d\n', size(WW, 1));
+fprintf(fid, '%f %f %f %f -%f\n', WW(:,[1 2 3 4 5])');
+fclose(fid);

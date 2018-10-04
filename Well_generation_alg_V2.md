@@ -50,4 +50,5 @@ The well sets contains six methods of coordinate determination. For two of them 
 |Unknown			| Translate
 
 **Clarify what the other methods mean**
+<img src="translatedWellPos.png" alt="Q vs depth" width="800"/>
   
