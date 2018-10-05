@@ -23,7 +23,8 @@ For each farm:
 - Pumping rates.
 For the pumping rates compute the empirical cumulative distribution function based on the data that have known rates. Using the ECDF generate random pumping for the records that dont have pumping.
 Generate a random probability between [0,1]. Assign the corresponding pumping to that probability. 
- <img src="farm21_Q_ecdf.png" alt="ECDF of pumping" width="500"/>
+To avoid very large and mor importantly very small pumping rate the random values are generated within the [0.05, 0.9] space of the ECDF. For the existing pumping rates that lay beyond this space the rates are resampled based on the spaces between the green abd red lines.   
+ <img src="farm21_Q_ecdf.png" alt="ECDF of pumping" width="600"/>
  - Depth
  For the depth we identify the records that have both pumping and depth assigned. Note that we do not use the random pumping in that calculation. We fit a linear model and calculate the prediction interval that corresponds to standard deviation. Then for the missing depths we calculate a mean and standard deviation depth as a function of pumping. For this calculation we use also the gerenated pumpings. A normally distributed random depth is generated based on the mean and standard that were calculated as function of assigned pumping. 
  <img src="farm21_QD_fit.png" alt="Q vs depth" width="500"/>

@@ -188,7 +188,7 @@ shapewrite(Farms_poly, 'gis_data/FARMS_polyPump.shp');
 Farm_basin = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS_poly.shp');
 Farms_poly = shaperead('gis_data/FARMS_polyPump.shp');
 CVHMwells = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwells_30y_proj.shp');
-%
+%}
 %%
 clear WELLS4CVHM
 for ii = 1:length(Farms_poly)
@@ -232,47 +232,36 @@ for ii = 1:length(Farms_poly)
     %%% PUMPING
     idQ = ~isnan([tempWag.Q]') & [tempWag.Q]' > 0; % isolate the records that have pumping
     display(sum(idQ))
-    [f, x]=ecdf([tempWag(idQ,1).Q]'); % create an ECDF based on the data
-    % generate random pumping based on the ECDF 
-    for jj = 1:length(tempWag_mod)
-        if isnan(tempWag_mod(jj,1).Q)
-             tempWag_mod(jj,1).Q = round(interp1q(f,x,rand));
-        end
-    end
+    logQ = log10([tempWag(idQ,1).Q]');
+    [fQ, xQ]=ecdf(logQ); % create an ECDF based on the data
     
-    %%% DEPTH
-    % isolate the records that have pumping and depth
-    idQD = ~isnan([tempWag.Q]') & [tempWag.Q]' > 0 & ...
-           ~isnan([tempWag.depth]') & [tempWag.depth]' > 0;
-    display(sum(idQD))
-    QD_fit = fit(log10([tempWag(idQD,1).Q]'),log10([tempWag(idQD,1).depth]'), 'poly1');
-    % generate random depth if depth is missing
-    for jj = 1:length(tempWag_mod)
-        if isnan(tempWag_mod(jj,1).depth)
-            Dm = QD_fit(log10(tempWag_mod(jj,1).Q));
-            Ds = predint(QD_fit, log10(tempWag_mod(jj,1).Q),0.68,'observation','off');
-            tempWag_mod(jj,1).depth = round(10^normrnd(Dm, Dm-Ds(1)));
-        end
-    end
+    idD = ~isnan([tempWag.depth]') & [tempWag.depth]' > 0;
+    display(sum(idD))
+    logD = log10([tempWag(idD,1).depth]');
+    [fD, xD]=ecdf(logD);
     
-    %%% SCREEN LENGTH
-    % isolate the records that have pumping and depth and screen length
-    idQDS = ~isnan([tempWag.Q]') & [tempWag.Q]' > 0 & ...
-            ~isnan([tempWag.depth]') & [tempWag.depth]' > 0 & ...
-            ~isnan([tempWag.top]') & ~isnan([tempWag.bot]') & ...
+    idS = ~isnan([tempWag.top]') & ~isnan([tempWag.bot]') & ...
             [tempWag.bot]' - [tempWag.top]' > 0;
-    display(sum(idQDS))    
-    QDS_fit=fit([log10([tempWag(idQDS,1).Q]'), log10([tempWag(idQDS,1).depth]')], ...
-        log10([tempWag(idQDS,1).bot]' - [tempWag(idQDS,1).top]'), 'poly11');
+    display(sum(idS))
+    logS = log10([tempWag(idS,1).bot]' - [tempWag(idS,1).top]');
+    [fS, xS]=ecdf(logS);
+    
+    Stats.fQ = fQ; Stats.lowQ = 0.05;
+    Stats.xQ = xQ; Stats.uppQ = 0.9;
+    Stats.fD = fD; Stats.lowD = 0;
+    Stats.xD = xD; Stats.uppD = 1;
+    Stats.fS = fS; Stats.lowS = 0;
+    Stats.xS = xS; Stats.uppS = 1;
+    
     for jj = 1:length(tempWag_mod)
-        if isnan([tempWag_mod(jj,1).top]) || isnan([tempWag_mod(jj,1).bot])
-            Sm = QDS_fit(log10([tempWag_mod(jj,1).Q]'), log10([tempWag_mod(jj,1).depth]'));
-            Ss = predint(QDS_fit, [log10([tempWag_mod(jj,1).Q]'), log10([tempWag_mod(jj,1).depth]')],0.68,'observation','off');
-            tempWag_mod(jj,1).SL = round(10^normrnd(Sm, Sm-Ss(1)));
-        else
-            tempWag_mod(jj,1).SL = round(tempWag_mod(jj,1).bot - tempWag_mod(jj,1).top);
-        end
+        [ tempWag_mod(jj,1).Q, ...
+          tempWag_mod(jj,1).depth, ...
+          tempWag_mod(jj,1).SL ] = AssignQDS(S, ...
+                                             tempWag_mod(jj,1).Q, ...
+                                             tempWag_mod(jj,1).depth, ...
+                                             tempWag_mod(jj,1).SL );
     end
+
     
     % --------------- Urban wells-------------
     %%% PUMPING
