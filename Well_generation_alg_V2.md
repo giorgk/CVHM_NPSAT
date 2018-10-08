@@ -18,19 +18,22 @@ For each farm:
 1. Find the wells that correspond to the farm.
 2. Identify which wells are characterized as public and agricultural. For example for farm 21 there are 466 wells with 413 aggricultiral and 53 public.
 <img src="farm_21_wells.png" alt="Well locations for farm 21" width="500"/>
-3. For each of the two sets of agricultural and public wells populate the missing records. The following statistics are executed once for each set.
+3. For each of the two sets of agricultural and public wells populate the missing records. The following  is executed once for agricultural and once for public wells.
 
-- Pumping rates.
-For the pumping rates compute the empirical cumulative distribution function based on the data that have known rates. Using the ECDF generate random pumping for the records that dont have pumping.
-Generate a random probability between [0,1]. Assign the corresponding pumping to that probability. 
-To avoid very large and mor importantly very small pumping rate the random values are generated within the [0.05, 0.9] space of the ECDF. For the existing pumping rates that lay beyond this space the rates are resampled based on the spaces between the green abd red lines.   
- <img src="farm21_Q_ecdf.png" alt="ECDF of pumping" width="600"/>
- - Depth
- For the depth we identify the records that have both pumping and depth assigned. Note that we do not use the random pumping in that calculation. We fit a linear model and calculate the prediction interval that corresponds to standard deviation. Then for the missing depths we calculate a mean and standard deviation depth as a function of pumping. For this calculation we use also the gerenated pumpings. A normally distributed random depth is generated based on the mean and standard that were calculated as function of assigned pumping. 
- <img src="farm21_QD_fit.png" alt="Q vs depth" width="500"/>
- - Screen length
- A similar approach was used do the screen length with the main difference beign that the mean and standard deviation of screen length is a function of a pumping and depth.
+- Compute the Empirical Cumulative Distribution Function of Pumping, Depth, and Snreen length using the valid records from each set. For example valid are numeric values that make sence (Positive depth and Screen length, nonzero pumping etc)
+<img src="farm21_ECDF.png" alt="ECDF of pumping" width="1300"/>
+
+ - Next loop through the well records and populate the missing values with the help of the ECDFs. 
+ For example if all *Q*, *D* and *SL* are missing, assign a random *Q* by picking a uniformly distributed random number *rQ* within [0,1] and interpolate the *Q* that corresponds to that random value.
+ For the Depth pick another random number around *rQ* and assign a *D* value. 
+ FInally for the Screen length, pick a rndom number around (*rQ* + *rD*)/2 and assign the corresponding Screen length. 
+ If there are known values we interpolate their cumulative probability and use that to generate the missing values.
  
+ For the Pumping rate to avoid very large and more importantly very small pumping rates the random values are generated within a smaller space [a b] (e.g.( [0.05, 0.9]) space of the ECDF. For the existing pumping rates that lay beyond this space the rates are resampled based on the spaces between the green abd red lines.
+ <img src="farm21_Q_ecdf.png" alt="ECDF of pumping" width="600"/>
+
+ 
+ **Check that again:**
  The above algorithm populates the missing records using independent statistics for each farm and each set of public and agricultural wells.
  However there are some cases were that was not possible. For the public wells, for example, there were farms with very few records that was not possible to compute the required statistics. In those cases we expanded the data set and use the all subbasins records (e.g. Sacramento Valley, San Joaquin Valley Tularey lake basin). In addition, for farm 19 there are not available records with all three of the well properties available and we included for the statistic calclulation the farms 20 and 21. 
 
