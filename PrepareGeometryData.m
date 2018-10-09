@@ -117,6 +117,34 @@ for ii = 1:length(buff(1,1).X) - 1
         buff_pnt = [buff_pnt; buff(1,1).X(ii) buff(1,1).Y(ii)];
     end
 end
+%% Read the Elevation from the DIS shapefile
+dis = shaperead('/home/giorgk/Documents/UCDAVIS/cvhm_data/CVHM_database/DIS.shp');
+clear BOT_ELEV
+BOT_ELEV{10,1} = [];
+for ii = 1:size(dis,1)
+    ii
+    xc = mean(dis(ii,1).X(1:4));
+    yc = mean(dis(ii,1).Y(1:4));
+    
+    for jj = 1:10
+        if jj == 10
+            el = dis(ii,1).cvr2lay10b*0.3048;
+        else
+            el = dis(ii,1).(['cvr2lay' num2str(jj+1) 't'])*0.3048;
+        end
+        if el ~= 0
+            BOT_ELEV{jj,1} = [BOT_ELEV{jj,1}; xc yc el];
+        end
+    end
+end
+%% Add the buffer points
+for ii = 1:length(BOT_ELEV)
+    Felev = scatteredInterpolant(BOT_ELEV{ii,1}(:,1), BOT_ELEV{ii,1}(:,2), BOT_ELEV{ii,1}(:,3));
+    Felev.Method = 'nearest';
+    Felev.ExtrapolationMethod = 'nearest';
+    buff_pnt_Z = Felev(buff_pnt(:,1), buff_pnt(:,2));
+    BOT_ELEV{ii,1} = [BOT_ELEV{ii,1}; buff_pnt(:,1), buff_pnt(:,2) buff_pnt_Z];
+end
 %%
 ids = [2:10 10]';
 for ii = 1:9 tp{ii,1} = 'Top';end; tp{10,1} = 'Bot';

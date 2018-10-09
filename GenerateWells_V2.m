@@ -183,7 +183,7 @@ for ii = 1:size(CVHMwells,1)
     end
 end
 shapewrite(Farms_poly, 'gis_data/FARMS_polyPump.shp');
-%}
+%
 %% Generate Pumping wells
 Farm_basin = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS_poly.shp');
 Farms_poly = shaperead('gis_data/FARMS_polyPump.shp');
@@ -241,8 +241,8 @@ for ii = 1:length(Farms_poly)
     [fD, xD]=ecdf(logD);
     
     %%% Screen length ECDF
-    idS = ~isnan([tempWag.top]') & ~isnan([tempWag.bot]') & ...
-            [tempWag.bot]' - [tempWag.top]' > 0;
+    tempSL = [tempWag.bot]' - [tempWag.top]';
+    idS = ~isnan(tempSL) & tempSL < 2000  & tempSL > 0;
     display(sum(idS))
     logS = log10([tempWag(idS,1).bot]' - [tempWag(idS,1).top]');
     [fS, xS]=ecdf(logS);
@@ -301,8 +301,8 @@ for ii = 1:length(Farms_poly)
     [fD, xD]=ecdf(logD);
     
     %%% Screen length ECDF
-    idS = ~isnan([tempWpb.top]') & ~isnan([tempWpb.bot]') & ...
-            [tempWpb.bot]' - [tempWpb.top]' > 0;
+    tempSL = [tempWpb.bot]' - [tempWpb.top]';
+    idS = ~isnan(tempSL) & tempSL < 2000  & tempSL > 0;
     display(sum(idS))
     logS = log10([tempWpb(idS,1).bot]' - [tempWpb(idS,1).top]');
     [fS, xS]=ecdf(logS);
@@ -336,7 +336,7 @@ for ii = 1:length(Farms_poly)
     WELLS4CVHM(ii,1).Nag = length(tempWag_mod);
 end
 WELLS4CVHM(17,:) = [];
-%}
+%
 %% Scale the pumping rates to match the desired pumping
 Total_pump_vol = 28988263.07; %m^3/day
 Min_pumping = 400;
@@ -543,6 +543,7 @@ Ftop = scatteredInterpolant(topelev.p(:,1),topelev.p(:,2),topelev.v);
 % abd the bottom of the aquifer
 botelev = read_Scattered('CVHM_Bot_elev.npsat',2);
 Fbot = scatteredInterpolant(botelev.p(:,1),botelev.p(:,2),botelev.v);
+%}
 %%
 cnvrs = 0.3048;
 for ii = 1:size(WW,1)
