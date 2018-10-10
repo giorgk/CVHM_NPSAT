@@ -45,7 +45,7 @@ subsection B. Geometry  ========================================
     # a----------------------------------
     # Top elevation function must be either a single value
     # or the name of a file
-    set a Top elevation function    = CVHM_top_elev1.npsat
+    set a Top elevation function    = CVHM_top_elev4.npsat
 
     # b----------------------------------
     # Bottom elevation function must be either a single value
@@ -138,7 +138,7 @@ subsection F. Sources & Sinks ==================================
   # c----------------------------------
   # Well network
   # The name of a file with the well information
-  set c Wells                = CVHM_wells1.npsat
+  set c Wells                = CVHM_wells3.npsat
 end
 
 

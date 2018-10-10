@@ -6,7 +6,7 @@
 % so that the are under the water table
 %
 %% Read new water table as point cloud
-fid = fopen('output/init_surf_1.xyz','r');
+fid = fopen('output/init_surf_4.xyz','r');
 Np = fscanf(fid, '%d',1);
 temp = fscanf(fid, '%f',Np*4);
 fclose(fid);
@@ -34,7 +34,7 @@ FnewElev.Method = 'nearest';
 FnewElev.ExtrapolationMethod = 'nearest';
 %% Print a new top for the model
 newp = FnewElev(topelev.p(:,1), topelev.p(:,2));
-writeScatteredData('CVHM_top_elev2.npsat', ...
+writeScatteredData('CVHM_top_elev5.npsat', ...
                    struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), ...
                    [topelev.p(:,1) topelev.p(:,2) newp]);
 %}
@@ -44,7 +44,7 @@ writeScatteredData('CVHM_top_elev2.npsat', ...
 %
 wells = readWells('CVHM_wells.npsat');
 % top 
-topelev = read_Scattered('CVHM_top_elev2.npsat',2);
+topelev = read_Scattered('CVHM_top_elev4.npsat',2);
 Ftop = scatteredInterpolant(topelev.p(:,1), topelev.p(:,2), topelev.v(:,1));
 % Old top this will help identifying the depth 
 Oldtopelev = read_Scattered('CVHM_top_elev.npsat',2);
@@ -66,9 +66,13 @@ for ii = 1:size(wells,1)
     %if tw > wt_n
     wt_o = Ftop_old(xw,yw); % old water table
     dw = wt_n - wt_o;
+    extra_dw = 0;
+    if tw > wt_n
+        extra_dw = -30;
+    end
     
-    tw_n = tw + dw;
-    bw_n = bw + dw;
+    tw_n = tw + dw + extra_dw;
+    bw_n = bw + dw + extra_dw;
     bs = Fbot(xw, yw);
     if bw_n < bs
         dup = 10 + bs - bw_n;
@@ -84,7 +88,7 @@ for ii = 1:size(wells,1)
     %end
 end
 %% Print the updated wells
-fid = fopen('CVHM_wells2.npsat','w');
+fid = fopen('CVHM_wells3.npsat','w');
 fprintf(fid, '%d\n', size(wells, 1));
 fprintf(fid, '%f %f %f %f %f\n', wells');
 fclose(fid);
