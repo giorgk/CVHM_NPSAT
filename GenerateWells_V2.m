@@ -1,5 +1,5 @@
 %% WELL GENERATION ALGORITHM V2 
-%{
+%
 % In this version we are going to take into account the pumping 
 % distribution of CVHM and combined information from the well dataset and
 % CVHM model

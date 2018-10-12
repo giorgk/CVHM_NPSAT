@@ -5,8 +5,27 @@
 % which we will use it to update the initial elevation and the well screens
 % so that the are under the water table
 %
+%% make init_surf from parallel run
+nproc = 6;
+Elev_new = [];
+for ii = 0:nproc-1
+    fid = fopen(['output/cvhm_top_000_' num2str(ii,'%04d') '.xyz'],'r');
+    Np = fscanf(fid, '%d',1);
+    temp = fscanf(fid, '%f',Np*4);
+    fclose(fid);
+    temp = reshape(temp, 4, Np)';
+    Elev_new = [Elev_new;temp];
+end
+%% Write the assembled new elevation into one file
+% This will have duplicalted points. Therefore create a scatter interpolant
+% using the code snippet bellow to take care of this
+fid = fopen('output/init_surf_ref3.xyz','w');
+fprintf(fid, '%d\n', length(FnewElev.Values));
+fprintf(fid, '%f %f %f\n', [FnewElev.Points FnewElev.Values]');
+fclose(fid);
+
 %% Read new water table as point cloud
-fid = fopen('output/init_surf_4.xyz','r');
+fid = fopen('output/init_surf_0.xyz','r');
 Np = fscanf(fid, '%d',1);
 temp = fscanf(fid, '%f',Np*4);
 fclose(fid);
@@ -20,7 +39,7 @@ hold on
 plot3(topelev.p(:,1), topelev.p(:,2), topelev.v(:,1),'.b')
 %% try removing the extreme points
 Elev_new_mod = Elev_new;
-Elev_new_mod(Elev_new_mod(:,4) > 225,:) = [];
+%Elev_new_mod(Elev_new_mod(:,4) > 225,:) = [];
 %dst = sqrt((Elev_new_mod(:,1) - Elev_new_mod(18498,1)).^2 + (Elev_new_mod(:,2) - Elev_new_mod(18498,2)).^2);
 %Elev_new_mod(dst < 4700,:) = [];
 
@@ -44,7 +63,7 @@ writeScatteredData('CVHM_top_elev5.npsat', ...
 %
 wells = readWells('CVHM_wells.npsat');
 % top 
-topelev = read_Scattered('CVHM_top_elev4.npsat',2);
+topelev = read_Scattered('CVHM_top_elev3.npsat',2);
 Ftop = scatteredInterpolant(topelev.p(:,1), topelev.p(:,2), topelev.v(:,1));
 % Old top this will help identifying the depth 
 Oldtopelev = read_Scattered('CVHM_top_elev.npsat',2);
@@ -61,19 +80,46 @@ for ii = 1:size(wells,1)
     tw = wells(ii,3);
     bw = wells(ii,4);
     
-    wt_n = Ftop(xw,yw); % new water table
+    % dont allow very short wells
+    sl = tw - bw;
+    if sl < 6.096
+        sl = 6.096;
+    end
     
-    %if tw > wt_n
+    wt_n = Ftop(xw,yw); % new water table
     wt_o = Ftop_old(xw,yw); % old water table
+    bs = Fbot(xw, yw); % base of aquifer
+    
+    % if the screen length is longer than the aquifer depth, 
+    % make the screen length shorter 
+    aq_depth = wt_n - bs;
+    if sl + 20 > aq_depth
+        sl = aq_depth - 20;
+    end
+    
+    % This is the offset in the water table between 2 consecutive runs
+    % negative means the water table dropped so we have to move the well
+    % lower
     dw = wt_n - wt_o;
+    % if the top of the screen was found higher than the new water table
+    % then lower by an extra offset
     extra_dw = 0;
     if tw > wt_n
         extra_dw = -30;
     end
     
+    % the new well top is the old plus the offset
     tw_n = tw + dw + extra_dw;
-    bw_n = bw + dw + extra_dw;
-    bs = Fbot(xw, yw);
+    bw_n = tw_n - sl;
+    
+    % make sure its not too close to water table
+    if wt_n - tw_n < 10
+        tw_n = wt_n - 10;
+        bw_n = tw_n - sl;
+    end
+    
+    % if the bottom of the well was lowered bellow the base move the we;;
+    % screen a bit higher
     if bw_n < bs
         dup = 10 + bs - bw_n;
         if tw_n + dup + 10 < wt_n

@@ -145,7 +145,7 @@ for ii = 1:length(BOT_ELEV)
     buff_pnt_Z = Felev(buff_pnt(:,1), buff_pnt(:,2));
     BOT_ELEV{ii,1} = [BOT_ELEV{ii,1}; buff_pnt(:,1), buff_pnt(:,2) buff_pnt_Z];
 end
-%%
+%% OLD dont use
 ids = [2:10 10]';
 for ii = 1:9 tp{ii,1} = 'Top';end; tp{10,1} = 'Bot';
 for ii = 1:length(ids)
@@ -199,6 +199,29 @@ for ii = 1:10
     A = fscanf(fid,'%f', 441*98);
     VK{ii,1} = reshape(A,98,441)';
     fclose(fid);
+end
+%% plot HK
+ii = 3;
+if ii < 1; ii = 1;end
+if ii > 10; ii = 10; end
+M = HK{ii,1}(368:378,55:65);
+surf(M,'edgecolor','none');
+axis equal
+axis ij
+view(0,90);
+%% tweak parts of the HK field if needed
+for ii = 1:10
+   %
+   M = HK{ii,1}(320:332,17:22);
+   M(M==0.053) = M(8,5);
+   HK{ii,1}(320:332,17:22) = M;
+   %
+   M = HK{ii,1}(310:322,76:90);
+   temp_val = min(M(M>1));
+   if ~isempty(temp_val)
+       M(M<1 & M > 0)=temp_val;
+       HK{ii,1}(310:322,76:90) = M;
+   end
 end
 %% 
 % loop through the cells that contain HK and VK information and identify
