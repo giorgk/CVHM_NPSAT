@@ -6,10 +6,10 @@
 % so that the are under the water table
 %
 %% make init_surf from parallel run
-nproc = 6;
+nproc = 64;
 Elev_new = [];
 for ii = 0:nproc-1
-    fid = fopen(['output/cvhm_top_000_' num2str(ii,'%04d') '.xyz'],'r');
+    fid = fopen(['output/Ref7/cvhm_top_000_' num2str(ii,'%04d') '.xyz'],'r');
     Np = fscanf(fid, '%d',1);
     temp = fscanf(fid, '%f',Np*4);
     fclose(fid);
@@ -19,7 +19,7 @@ end
 %% Write the assembled new elevation into one file
 % This will have duplicalted points. Therefore create a scatter interpolant
 % using the code snippet bellow to take care of this
-fid = fopen('output/init_surf_ref3.xyz','w');
+fid = fopen('output/init_surf_ref7.xyz','w');
 fprintf(fid, '%d\n', length(FnewElev.Values));
 fprintf(fid, '%f %f %f\n', [FnewElev.Points FnewElev.Values]');
 fclose(fid);
