@@ -2,7 +2,7 @@
 <html>
 <head>
 <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
-<script type="text/javascript" src="Jscripts/MonthlyStorage.js"></script>
+<script type="text/javascript" src="Jscripts/Storage.js"></script>
 <script type="text/javascript">
     
 var mydata = [
@@ -43,14 +43,29 @@ window.onload = function () {
             showInLegend: true,
             name: "CVHM Monthly",
             markerType: "square",
-			dataPoints: StorageMonthly
+			dataPoints: CVHMMonthly
 		},
         {
 			// Change type to "doughnut", "line", "splineArea", etc.
 			type: "line",
             showInLegend: true,
             name: "CVHM Yearly",
-			dataPoints: StorageYearly
+			dataPoints: CVHMYearly
+		},
+        {
+			// Change type to "doughnut", "line", "splineArea", etc.
+			type: "line",
+            showInLegend: true,
+            name: "C2Vsim Monthly",
+            markerType: "square",
+			dataPoints: C2VsimMonthly
+		},
+        {
+			// Change type to "doughnut", "line", "splineArea", etc.
+			type: "line",
+            showInLegend: true,
+            name: "C2Vsim Yearly",
+			dataPoints: C2VsimYearly
 		}
 		]
 	});
@@ -59,14 +74,18 @@ window.onload = function () {
 </script>
 </head>
 <body>
-<h1>Groundwater budget calculations based on CVHM</h1>
+<h1>Groundwater budget analysis</h1>
     <p>
     A basic assumption of the NPSAT approach is that the flow is steady state. 
     To derive a representative steady state solution it is important that the storage change is approximately 0.<br/>
     The following plot below shows the monthly and yearly cumulative storage change based on the 
-    <a href="https://ca.water.usgs.gov/projects/central-valley/central-valley-hydrologic-model.html">CVHM model</a>.<br/>
-    Ovarall there is a significant decline in storage, however there are several periods where the storage change is very close to 0.<br/>
-    The longest recent period spans 21 years from <b>12/1977</b> to <b>4/1999</b>, where the storage has been declined 35.5 mACFT with respect to initial conditions. <br/> However, the most recent period spans 11 years from <b>12/1991</b> to <b>9/2003</b>. 
+    <a href="https://ca.water.usgs.gov/projects/central-valley/central-valley-hydrologic-model.html">CVHM</a> and 
+    <a href="https://water.ca.gov/Library/Modeling-and-Analysis/Central-Valley-models-and-tools/C2VSim">C2Vsim</a> hydrologic models.<br/>
+        
+    Overall there is a significant decline in storage, however there are few periods where the storage change is very close to 0.<br/>
+    According to the CVHM, the longest recent period with zero storage change spans 21 years from <b>12/1977</b> to <b>4/1999</b>, where the storage has been declined 35.5 mACFT with respect to initial conditions. <br/> However, the most recent period spans 11 years from <b>12/1991</b> to <b>9/2003</b>. <br/>
+    According to C2Vsim there is only one relatively long period with negligible storage change between <b>10/1992</b> and <b>4/2007</b>.
+    
     </p>
     
 <div id="chartContainer" style="height: 400px; width: 100%;"></div>

@@ -5,6 +5,7 @@ function writeTimeSeries2JS(outfile, varname, D, M, Y, data, append)
 % varname is the name of the variable
 % D, M, Y, are the day month and year
 % data are the data
+% append: if true the is going to add this variable at the end of the file
 
 if append
     fid = fopen([outfile '.js'],'a');

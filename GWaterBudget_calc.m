@@ -78,8 +78,8 @@ STRG_year = sum(reshape(STRG, 12, 42),1);
 
 
 %% write storage as javascript file
-writeTimeSeries2JS('Jscripts/MonthlyStorage', 'StorageMonthly', ones(504,1), monthlySUM(7:end,2), monthlySUM(7:end,1), cumsum([0; -STRG(1:end-1)]/10^6/1233.48184), false);
-writeTimeSeries2JS('Jscripts/MonthlyStorage', 'StorageYearly', ones(length(STRG_year),1), 2*ones(length(STRG_year),1),[1962:2003]', [0;-cumsum(STRG_year')]./10^6/1233.48184, true);
+writeTimeSeries2JS('Jscripts/Storage', 'CVHMMonthly', ones(504,1), monthlySUM(7:end,2), monthlySUM(7:end,1), cumsum([0; -STRG(1:end-1)]/10^6/1233.48184), false);
+writeTimeSeries2JS('Jscripts/Storage', 'CVHMYearly', ones(length(STRG_year),1), 2*ones(length(STRG_year),1),[1962:2003]', [0;-cumsum(STRG_year')]./10^6/1233.48184, true);
 
 %%
 plot(cumsum([0; -STRG]/10^6/1233.48184),'.-')
