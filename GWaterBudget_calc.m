@@ -1,5 +1,5 @@
 % path where the cbc flow data in matlab format are located
-%
+% Claudia's Caped Run
 cbcf_path = '/home/giorgk/Documents/UCDAVIS/CVHM_DATA/ClaudiaRun/';
 m=4;y=1961;
 t2=0;
@@ -39,6 +39,20 @@ end
 % The cell-by-cell storage term gives the net flow to or from storage in a variable-head cell. The net storage
 % for each cell in the grid is saved in transient simulations if the appropriate flags are set. Withdrawal from storage
 % in the cell is considered positive, whereas accumulation in storage is considered negative.
+%% CVHM default run
+load('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/CBC.mat');
+%%
+m=4;y=1961;
+for ii=1:510
+    if m==13
+        m=1;y=y+1;
+    end
+    monthlySUM(ii,1)=y;
+    monthlySUM(ii,2)=m;
+    monthlySUM(ii,3)=sum(sum(sum(CBC{ii,1}{1,2}))) + sum(sum(sum(CBC{ii,1}{7,2})));
+    m=m+1;
+end
+%%
 %%
 clear temp YearlySum
 cnt=1;
@@ -55,16 +69,28 @@ for i=7:510
 end
 %
 %%
-for i = 1:size(monthlySUM, 1)
-    STRG(i,1) = eomday(monthlySUM(i,1), monthlySUM(i,2))*monthlySUM(i,3);
+clear STRG
+for i = 7:size(monthlySUM, 1)
+    STRG(i-6,1) = eomday(monthlySUM(i,1), monthlySUM(i,2))*monthlySUM(i,3) + eomday(monthlySUM(i,1), monthlySUM(i,2))*monthlySUM(i,5);
 end
+%% average storage per year
+STRG_year = sum(reshape(STRG, 12, 42),1);
+
+
+%% write storage as javascript file
+writeTimeSeries2JS('Jscripts/MonthlyStorage', 'StorageMonthly', ones(504,1), monthlySUM(7:end,2), monthlySUM(7:end,1), cumsum([0; -STRG(1:end-1)]/10^6/1233.48184), false);
+writeTimeSeries2JS('Jscripts/MonthlyStorage', 'StorageYearly', ones(length(STRG_year),1), 2*ones(length(STRG_year),1),[1962:2003]', [0;-cumsum(STRG_year')]./10^6/1233.48184, true);
+
 %%
 plot(cumsum([0; -STRG]/10^6/1233.48184),'.-')
 grid on
 grid minor
-%% 
-istart = 199; % Oct 1977
-iend = 503; % Feb 2003
+%% Period 1
+istart = 200; % Noe 1977
+iend = 456; % Mar 1999
+%% Period 2
+istart = 368; % Noe 1991
+iend = 503; % Sep 2003
 %% Average Streams
 AVstrm = STRLK.data(:,istart:iend); %m^3/day
 ym = STRLK.ym(istart:iend,:);

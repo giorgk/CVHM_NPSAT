@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+<script type="text/javascript" src="Jscripts/MonthlyStorage.js"></script>
+<script type="text/javascript">
+    
+var mydata = [
+				{ label: "apple",  y: 10  },
+				{ label: "orange", y: 15  },
+				{ label: "banana", y: 25  },
+				{ label: "mango",  y: 30  },
+				{ label: "grape",  y: 28  }
+			];
+
+window.onload = function () {
+	var chart = new CanvasJS.Chart("chartContainer", {
+        theme: "light1", // "light1", "light2", "dark1", "dark2"
+        animationEnabled: true,
+        zoomEnabled: true,
+		title:{
+			text: "Cumulative Change in Groundwater storage"              
+		},
+        axisY:{
+            title: "Millions of ACFT",
+            crosshair: {
+                enabled: true
+            }
+        },
+        axisX:{
+            valueFormatString: "MM YY",
+            title: "Time"
+        },
+        legend:{
+            verticalAlign: "bottom",
+            horizontalAlign: "left",
+            dockInsidePlotArea: true,
+        },
+		data: [              
+		{
+			// Change type to "doughnut", "line", "splineArea", etc.
+			type: "line",
+            showInLegend: true,
+            name: "CVHM Monthly",
+            markerType: "square",
+			dataPoints: StorageMonthly
+		},
+        {
+			// Change type to "doughnut", "line", "splineArea", etc.
+			type: "line",
+            showInLegend: true,
+            name: "CVHM Yearly",
+			dataPoints: StorageYearly
+		}
+		]
+	});
+	chart.render();
+}
+</script>
+</head>
+<body>
+<h1>Groundwater budget calculations based on CVHM</h1>
+    <p>
+    A basic assumption of the NPSAT approach is that the flow is steady state. 
+    To derive a representative steady state solution it is important that the storage change is approximately 0.<br/>
+    The following plot below shows the monthly and yearly cumulative storage change based on the 
+    <a href="https://ca.water.usgs.gov/projects/central-valley/central-valley-hydrologic-model.html">CVHM model</a>.<br/>
+    Ovarall there is a significant decline in storage, however there are several periods where the storage change is very close to 0.<br/>
+    The longest recent period spans 21 years from <b>12/1977</b> to <b>4/1999</b>, where the storage has been declined 35.5 mACFT with respect to initial conditions. <br/> However, the most recent period spans 11 years from <b>12/1991</b> to <b>9/2003</b>. 
+    </p>
+    
+<div id="chartContainer" style="height: 400px; width: 100%;"></div>
+    
+    
+    <h1>Calculation of Steady state flows</h1>
+    <p>
+        For each of the two selected periods we will calculate the average flows that will be used as steady state conditions during the simulation.
+        
+        
+    </p>
+    
+</body>
+</html>
