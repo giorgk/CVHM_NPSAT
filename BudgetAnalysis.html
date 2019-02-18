@@ -14,7 +14,7 @@ var mydata = [
 			];
 
 window.onload = function () {
-	var chart = new CanvasJS.Chart("chartContainer", {
+	var chartStorage = new CanvasJS.Chart("chartStorage", {
         theme: "light1", // "light1", "light2", "dark1", "dark2"
         animationEnabled: true,
         zoomEnabled: true,
@@ -69,32 +69,71 @@ window.onload = function () {
 		}
 		]
 	});
-	chart.render();
+    chartStorage.render();
+    
+    var chartStreamBud = new CanvasJS.Chart("chartStreamBud", {
+        animationEnabled: true,
+        theme: "light1",
+        title: {
+            text: "Central valley water budget"
+        },
+        axisY:{
+            title: "Million m^3/day"
+        },
+        data: [{
+            type: "rangeColumn",
+            name: "CVHM 1977 - 1999",
+            showInLegend: true,
+            dataPoints: [      
+                {y: [-7.1751, 7.7613] , label: "Streams" },
+                { y: [-10.0332, 37.1881], label: "Recharge" },
+                { y: [-28.7656, 1.1106], label: "Wells" },
+                { y: [0, 8.610], label: "Discrepancy x 100" }
+            ]
+        },
+        {
+            type: "rangeColumn",
+            name: "CVHM 1991 - 2003",
+            showInLegend: true,
+            dataPoints: [      
+                {y: [-7.4104, 8.1786] , label: "Streams" },
+                { y: [-10.3726, 36.0881], label: "Recharge" },
+                { y: [-27.1156, 0.8610], label: "Wells" },
+                { y: [0, 22.91], label: "Discrepancy x 100" }
+            ]
+        }]                                   
+    });
+    chartStreamBud.render();
 }
 </script>
 </head>
 <body>
 <h1>Groundwater budget analysis</h1>
     <p>
-    A basic assumption of the NPSAT approach is that the flow is steady state. 
+    A basic assumption of the NPSAT approach is that the groundwater flow is steady state. 
     To derive a representative steady state solution it is important that the storage change is approximately 0.<br/>
     The following plot below shows the monthly and yearly cumulative storage change based on the 
     <a href="https://ca.water.usgs.gov/projects/central-valley/central-valley-hydrologic-model.html">CVHM</a> and 
     <a href="https://water.ca.gov/Library/Modeling-and-Analysis/Central-Valley-models-and-tools/C2VSim">C2Vsim</a> hydrologic models.<br/>
         
     Overall there is a significant decline in storage, however there are few periods where the storage change is very close to 0.<br/>
-    According to the CVHM, the longest recent period with zero storage change spans 21 years from <b>12/1977</b> to <b>4/1999</b>, where the storage has been declined 35.5 mACFT with respect to initial conditions. <br/> However, the most recent period spans 11 years from <b>12/1991</b> to <b>9/2003</b>. <br/>
+    According to the CVHM, the longest recent period with zero storage change spans 21 years from <b>12/1977</b> to <b>4/1999</b>, where the storage has been declined 35.5 mACFT with respect to year 1961. <br/> However, there is a more recent period that spans 11 years from <b>12/1991</b> to <b>9/2003</b>. <br/>
     According to C2Vsim there is only one relatively long period with negligible storage change between <b>10/1992</b> and <b>4/2007</b>.
     
     </p>
     
-<div id="chartContainer" style="height: 400px; width: 100%;"></div>
+    <div id="chartStorage" style="height: 400px; width: 100%;"></div>
     
     
     <h1>Calculation of Steady state flows</h1>
     <p>
-        For each of the two selected periods we will calculate the average flows that will be used as steady state conditions during the simulation.
-        
+        For each of these periods we calculated the average inflows and outflows from the major sources which are the streams, the wells and the groundwater recharge. We observe that the differences of inflows and outflows between the two CVHM selected periods are almost negligible, while the sum of all flows from streams, wells and recharge, which is depicted as discrepancy in the plot bellow is very small for both periods indicating that no other water sources have any major controbution.
+    </p>
+    <div id="chartStreamBud" style="height: 400px; width: 50%;"></div>
+    
+    <p>
+        However the stresses are spread out thoughtout Central Valley in highly heterogeneous fashion.<br/>
+        <a href="https://giorgk.users.earthengine.app/view/cvgwbud" target="_blank"><img src="EEGWBUD_512.png" width="30%" height="19%" title="CV GW bud" alt="CVgwbud"></a>
         
     </p>
     
