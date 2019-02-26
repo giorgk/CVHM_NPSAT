@@ -251,8 +251,8 @@ StrmAvNeg_91_03 = sum([bud.QstrmNeg_91_03]'./TotDays2)/10^6;
 
 
 %% Average Streams
-AVstrm = STRLK.data(:,istart:iend); %m^3/day
-ym = STRLK.ym(istart:iend,:);
+AVstrm = STRLK.data(:,istart2:iend2); %m^3/day
+ym = STRLK.ym(istart2:iend2,:);
 totdays = 0;
 for ii = 1:size(AVstrm,2)
     totdays = totdays + eomday(ym(ii,1), ym(ii,2));
@@ -260,10 +260,10 @@ for ii = 1:size(AVstrm,2)
 end
 AVstrm = sum(AVstrm,2)/totdays; %m^3/day Average over the period of interest
 STRMS = [STRLK.rc AVstrm];
-save('AvStresses','STRMS','-append')
+save('AvStresses','STRMS')
 %% Average Recharge
 AVrch = zeros(size(RCH.data{1,1},1), size(RCH.data{1,1},2));
-ym = RCH.ym(istart:iend,:);
+ym = RCH.ym(istart2:iend2,:);
 totdays = 0;
 for ii = 1:size(ym,1)
     totdays = totdays + eomday(ym(ii,1), ym(ii,2));
@@ -309,6 +309,6 @@ Frch.ExtrapolationMethod = 'nearest';
 buf_val = Frch(buff_pnt(:,1), buff_pnt(:,2));
 xy_rch = [xy_rch; buff_pnt buf_val];
 %% write the rch file
-writeScatteredData('CVHM_RCH.npsat', struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), xy_rch);
+writeScatteredData('CVHM_RCH_per2.npsat', struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), xy_rch);
 
 

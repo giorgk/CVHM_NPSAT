@@ -284,7 +284,7 @@ ii = 4;
 cnt = 1;
 for ii = 1:size(CVHMSTRM,1)
     for mm = 1:size(CVHMSTRM(ii,1).PATHS,1)
-        fid = fopen(['temp_stream' num2str(cnt) '.txt'], 'w');
+        fid = fopen(['stream_temp_files/temp_stream_per2_in_' num2str(cnt) '.txt'], 'w');
         fprintf(fid, '%d\n', length(CVHMSTRM(ii,1).PATHS{mm, 1}));
         fprintf(fid, '%f %f %f %f %f %f %f %f\n',...
             [CVHMSTRM(ii,1).ND(CVHMSTRM(ii,1).PATHS{mm, 1}',:)/100000 zeros(length(CVHMSTRM(ii,1).PATHS{mm, 1}),1)... % P {x,y,z}
@@ -297,7 +297,7 @@ for ii = 1:size(CVHMSTRM,1)
 end
 %
 %% Read stream polygons from houdini.
-% Run this part after the animation in houdini file "streams.hipnc" has
+% Run this part after the animation in houdini file "CVHM_HOU.hipnc" has
 % been played. The animation creates one file per river path.
 % Here we read the files and create the stream input file
 cnt = 1;
@@ -305,7 +305,7 @@ clear STRM_POLY
 STRM_POLY(1,1).Q = [];
 STRM_POLY(1,1).Geo = [];
 for ii = 1:53 % check the number of generated files
-    fid = fopen(['temp_stream_out' num2str(ii) '.txt'], 'r');
+    fid = fopen(['stream_temp_files/temp_stream_per2_out' num2str(ii) '.txt'], 'r');
     Npoly = textscan(fid,'%d',1);
     for jj = 1:Npoly{1,1}
         C = textscan(fid,'%d %f',1);
@@ -365,7 +365,7 @@ for ii = 1:size(STRM_POLY,1)
 end
 STRM_POLY(dlt_id,:) = [];
 %% Write the stream file (finally!)
-fid = fopen('CVHM_streams.npsat','w');
+fid = fopen('CVHM_streams_per2.npsat','w');
 fprintf(fid, '%d\n', size(STRM_POLY,1));
 for ii = 1:size(STRM_POLY,1)
     Np = size(STRM_POLY(ii,1).Geo,1);
