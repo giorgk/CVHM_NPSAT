@@ -338,7 +338,7 @@ end
 WELLS4CVHM(17,:) = [];
 %
 %% Scale the pumping rates to match the desired pumping
-Total_pump_vol = 28988263.07; %m^3/day
+Total_pump_vol = 32150091.788555; %m^3/day
 Min_pumping = 400;
 init_vol = abs(sum([WELLS4CVHM.UrbanPump]')) + abs(sum([WELLS4CVHM.AgPump]'));
 for ii = 1:length(WELLS4CVHM)

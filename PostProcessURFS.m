@@ -24,7 +24,19 @@ URFS(Nurfs,1).Y = nan;
 URFS(Nurfs,1).Vland = nan;
 URFS(Nurfs,1).Vcds = nan;
 URFS(Nurfs,1).riv = 0;
-%%
+%% raw URFS
+for ii = 1:Nurfs
+    URFS(ii,1).X = tempURFS(ii,1).p_lnd(1);
+    URFS(ii,1).Y = tempURFS(ii,1).p_lnd(2);
+    URFS(ii,1).Eid = tempURFS(ii,1).Eid;
+    URFS(ii,1).Sid = tempURFS(ii,1).Sid;
+    URFS(ii,1).Vland = tempURFS(ii,1).v_lnd(1);
+    URFS(ii,1).Vcds = tempURFS(ii,1).v_cds(1);
+    URFS(ii,1).riv = 0;
+    URFS(ii,1).urf = tempURFS(ii,1).URF;
+end
+clear tempURFS
+%% with fitting
 ft = fittype( '(1/(x*b*sqrt(2*pi)))*exp((-(log(x)-a)^2)/(2*b^2))', 'independent', 'x', 'dependent', 'y' );
 opts = fitoptions( 'Method', 'NonlinearLeastSquares' );
 opts.Display = 'Off';
@@ -88,10 +100,10 @@ for ii = 1:length(streams)
     id = unique([id;idd]);
     
     for jj = 1:length(id)
-        %URFS(id(jj),1).riv = 1;
-        %URFS(id(jj),1).urf = [];
-        URFS(ii,1).urf.mu = -100;
-        URFS(ii,1).urf.std = 1;
+        URFS(id(jj),1).riv = 1;
+        URFS(id(jj),1).urf = [];
+        %URFS(ii,1).urf.mu = -100;
+        %URFS(ii,1).urf.std = 1;
     end
 end
 %% Create shapefile with the end points of streamlines

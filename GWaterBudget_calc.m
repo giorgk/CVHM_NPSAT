@@ -260,6 +260,7 @@ for ii = 1:size(AVstrm,2)
 end
 AVstrm = sum(AVstrm,2)/totdays; %m^3/day Average over the period of interest
 STRMS = [STRLK.rc AVstrm];
+%%
 save('AvStresses','STRMS')
 %% Average Recharge
 AVrch = zeros(size(RCH.data{1,1},1), size(RCH.data{1,1},2));
