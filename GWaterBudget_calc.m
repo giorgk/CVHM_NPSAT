@@ -1,7 +1,12 @@
 % path where the cbc flow data in matlab format are located
 % Claudia's Caped Run
 %
+%% PATHS
+%% Home Linux
 cbcf_path = '/home/giorgk/Documents/UCDAVIS/CVHM_DATA/ClaudiaRun/';
+%% UCDAVIS Linux
+cbcf_path = '/media/giorgk/DATA/giorgk/Documents/CVHM_DATA/ClaudiaRun/';
+%%
 m=4;y=1961;
 t2=0;
 for i=1:510
@@ -175,7 +180,7 @@ for ii = 1:441
         bud(id,1).QrchNeg_91_03 = rch_neg2(ii,jj);
     end
 end
-%}
+%
 %% Repeat for the wells
 II = [bud.ROW]';
 JJ = [bud.COLUMN_]';
@@ -251,8 +256,8 @@ StrmAvNeg_91_03 = sum([bud.QstrmNeg_91_03]'./TotDays2)/10^6;
 
 
 %% Average Streams
-AVstrm = STRLK.data(:,istart2:iend2); %m^3/day
-ym = STRLK.ym(istart2:iend2,:);
+AVstrm = STRLK.data(:,istart1:iend1); %m^3/day
+ym = STRLK.ym(istart1:iend1,:);
 totdays = 0;
 for ii = 1:size(AVstrm,2)
     totdays = totdays + eomday(ym(ii,1), ym(ii,2));
@@ -264,11 +269,11 @@ STRMS = [STRLK.rc AVstrm];
 save('AvStresses','STRMS')
 %% Average Recharge
 AVrch = zeros(size(RCH.data{1,1},1), size(RCH.data{1,1},2));
-ym = RCH.ym(istart2:iend2,:);
+%ym = RCH.ym(istart1:iend1,:);
 totdays = 0;
-for ii = 1:size(ym,1)
-    totdays = totdays + eomday(ym(ii,1), ym(ii,2));
-    AVrch = AVrch + RCH.data{ii,1}*eomday(ym(ii,1), ym(ii,2)); %m^3/month;
+for ii = istart2:iend2
+    totdays = totdays + eomday(RCH.ym(ii,1), RCH.ym(ii,2));
+    AVrch = AVrch + RCH.data{ii,1}*eomday(RCH.ym(ii,1), RCH.ym(ii,2)); %m^3/month;
 end
 AVrch = AVrch/totdays;
 %%
@@ -311,5 +316,26 @@ buf_val = Frch(buff_pnt(:,1), buff_pnt(:,2));
 xy_rch = [xy_rch; buff_pnt buf_val];
 %% write the rch file
 writeScatteredData('CVHM_RCH_per2.npsat', struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), xy_rch);
-
-
+%}
+%% Average Well data
+AVwell = zeros(size(RCH.data{1,1},1), size(RCH.data{1,1},2));
+totdays = 0;
+for ii = istart2:iend2
+    ii
+    monthDays = eomday(WELLS.ym(ii,1), WELLS.ym(ii,2));
+    totdays = totdays + monthDays;
+    rc = WELLS.data{ii,1}(:,2:3);
+    rc = unique(rc, 'rows');
+    for jj = 1:size(rc,1)
+        id = find(WELLS.data{ii,1}(:,2) == rc(jj,1) & WELLS.data{ii,1}(:,3) == rc(jj,2));
+        AVwell(rc(jj,1),rc(jj,2)) = AVwell(rc(jj,1),rc(jj,2)) + sum(WELLS.data{ii,1}(id,4))*monthDays;
+    end
+    
+    rc = WELLS.data{ii,2}(:,2:3);
+    rc = unique(rc, 'rows');
+    for jj = 1:size(rc,1)
+        id = find(WELLS.data{ii,2}(:,2) == rc(jj,1) & WELLS.data{ii,2}(:,3) == rc(jj,2));
+        AVwell(rc(jj,1),rc(jj,2)) = AVwell(rc(jj,1),rc(jj,2)) + sum(WELLS.data{ii,2}(id,4))*monthDays;
+    end
+end
+AVwell = AVwell/totdays;

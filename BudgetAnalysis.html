@@ -116,7 +116,7 @@ window.onload = function () {
     <a href="https://ca.water.usgs.gov/projects/central-valley/central-valley-hydrologic-model.html">CVHM</a> and 
     <a href="https://water.ca.gov/Library/Modeling-and-Analysis/Central-Valley-models-and-tools/C2VSim">C2Vsim</a> hydrologic models.<br/>
         
-    Overall there is a significant decline in storage, however there are few periods where the storage change is very close to 0.<br/>
+    Overall in both models we observe a significant decline in storage, however there are few periods where the storage change is very close to 0.<br/>
     According to the CVHM, the longest recent period with zero storage change spans 21 years from <b>12/1977</b> to <b>4/1999</b>, where the storage has been declined 35.5 mACFT with respect to year 1961. <br/> However, there is a more recent period that spans 11 years from <b>12/1991</b> to <b>9/2003</b>. <br/>
     According to C2Vsim there is only one relatively long period with negligible storage change between <b>10/1992</b> and <b>4/2007</b>.
     
@@ -132,10 +132,14 @@ window.onload = function () {
     <div id="chartStreamBud" style="height: 400px; width: 50%;"></div>
     
     <p>
-        However the stresses are spread out thoughtout Central Valley in highly heterogeneous fashion.<br/>
+        However the stresses are distributed across Central Valley in highly heterogeneous fashion, so that parts of the Central Valley have negative balance especially in the south part.<br/>
+        The following tool is an interactive tool that calculates and plots the water balance for selected regions.<br/>
         <a href="https://giorgk.users.earthengine.app/view/cvgwbud" target="_blank"><img src="EEGWBUD_512.png" width="30%" height="19%" title="CV GW bud" alt="CVgwbud"></a>
-        
     </p>
+    
+    <h1>Stresses based on 1991 - 2003 CVHM</h1>
+    The previous section we plotted the budget terms by caclulating the negative and positive rates separately over the entire Central Valley. In the following map we show the spatioal distribution of average groundwater recharge, stream and pumping.
+    
     
 </body>
 </html>
