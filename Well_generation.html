@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <!-- includes for leaflet.js -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+        integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+        crossorigin=""/>
+        <!-- Make sure you put this AFTER Leaflet's CSS -->
+        <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
+        integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+        crossorigin=""></script>
+        
+        <style>
+            .legend { text-align: left; line-height: 20px; color: #111; } .legend i { width: 20px; height: 20px; float: left; margin-right: 8px; opacity: 0.8; }
+        </style>
+    
+    </head>
+    
+    <body>
+        <h1>Well data analysis</h1>
+        <h2>CVHM well data</h2>
+        
+        
+        <div id="mapid" style="width: 700px; height: 900px; position: relative;"></div>
+    
+        <script type="text/javascript" src="Jscripts/FMP_active_4326.js"></script>
+        <script type="text/javascript" src="Jscripts/FARMS_Pump_4326.js"></script>
+        <script>
+            var mymap = L.map('mapid').setView([38, -121.1], 8);
+            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                maxZoom: 18,
+                id: 'mapbox.streets',
+                accessToken: 'pk.eyJ1IjoiZ2lvcmdrIiwiYSI6ImNqc3h4Zmc3MjBqcmg0OXF4Y2E4Z3VwazMifQ.AIQu1J0MjGvQJ-B4KM5XHw'
+            }).addTo(mymap);
+            
+            
+            
+            function getColor(lu) {
+                return lu == 1 ? '#2b8cbe' :
+                       lu == 2 ? '#434343' :
+                       lu == 3 ? '#8856a7' :
+                       lu == 19 ? '#fa9fb5' : '#31a354';
+            }
+            
+            function FMPstyle(feature){
+                return {
+                    fillColor: getColor(feature.properties.LU_2000),
+                    weight: 0,
+                    opacity: 1,
+                    color: 'white',
+                    fillOpacity : 0.7
+                };
+            }
+            
+            function FARMSstyle(feature){
+                return {
+                    fillColor: 'white',
+                    weight: 2.5,
+                    opacity: 1,
+                    color: 'red',
+                    fillOpacity : 0.1
+                };
+            }
+            
+            L.geoJson(geojsonFMP, {style: FMPstyle}).addTo(mymap);
+            L.geoJson(FarmsPump, {style: FARMSstyle}).addTo(mymap);
+            
+            var legend = L.control({position: 'bottomright'});
+            legend.onAdd = function (map){
+                var div = L.DomUtil.create('div', 'info legend'),
+                    grades = [1, 2, 3, 19, 20],
+                    labels = ['Water', 'Urban', 'Native', 'Developed', 'Agriculture'];
+                
+                for (var i = 0; i < grades.length; i++){
+                    div.innerHTML += '<i style="background:' + getColor(grades[i]) + '"></i> ' + labels[i] + '<br>';
+                }
+                return div;
+            };
+            legend.addTo(mymap)
+            
+            
+            
+            
+        </script>
+        </body>
+
+
+</html>
