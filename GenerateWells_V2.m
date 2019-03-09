@@ -1,5 +1,5 @@
 %% WELL GENERATION ALGORITHM V2 
-%
+%{
 % In this version we are going to take into account the pumping 
 % distribution of CVHM and combined information from the well dataset and
 % CVHM model
@@ -10,7 +10,8 @@
 % Q pumping in gpm
 % year of construction
 % S = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CV_only_PubAg.shp');
-S = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVpbAG_mth.shp');
+%S = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVpbAG_mth.shp');
+load('/media/giorgk/DATA/giorgk/Documents/CVHM_DATA/WellData/CVpbAG_mth_shp.mat')
 %% Process well data set
 WellTable = readtable('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/giorgos_with_method_ll.csv');
 %% Create shapefile from the table
@@ -53,15 +54,27 @@ S(id_dlt,:) = [];
 id_dlt = [S.year]' > 2018;
 S(id_dlt,:) = [];
 %% plot histogram of age
-histogram([S.year]')
+H = histogram([S.year]','BinWidth',5);
 xlabel('Year of construction');
+% print as js data set
+for ii = 1:length(H.BinEdges)-1
+    fprintf('{ x: new Date( %d , 0), y: %d },\n', [H.BinEdges(ii) H.Values(ii)]);
+end
+fprintf('{ x: new Date( %d , 0), y: %d }\n', [H.BinEdges(end) H.Values(end)]);
 %% Find the number of wells for a given threshold
 age_thres = 25;
-for age_thres = 1:80
+for age_thres = 1:81
     Nwells(age_thres,1) = length(find([S.year]' > 2018 - age_thres));
 end
 %%
-plot(1:80, Nwells/1000,'linewidth',2)
+yrNw = [];
+for yr = 1900:2018
+    yrNw = [yrNw; yr length(find([S.year]' > yr))];
+    fprintf('{ x: new Date( %d , 0), y: %.3f },\n', [yrNw(end,1) yrNw(end,2)/1000]);
+end
+%%
+H = histogram([S.year]','BinWidth',1,'Normalization','cumcount');
+plot(1:81, Nwells/1000,'linewidth',2)
 xlabel('Well Age [year]')
 ylabel('# of wells [10^3]')
 grid on
@@ -189,11 +202,16 @@ Farm_basin = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS
 Farms_poly = shaperead('gis_data/FARMS_polyPump.shp');
 CVHMwells = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwells_30y_proj.shp');
 cvhmDomain = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/BAS_active_outline.shp');
-%
+%%
+load('gis_data/WellGenerationSHP');
+Farm_basin =Farm_basin';
+Farms_poly = Farms_poly';
+CVHMwells = CVHMwells';
+%}
 %%
 clear WELLS4CVHM
 for ii = 1:length(Farms_poly)
-    if ~isempty(find([0] == Farms_poly(ii,1).dwr_sbrgns,1))
+    if Farms_poly(ii,1).dwr_sbrgns == 0
         continue;
     end
         
@@ -204,125 +222,159 @@ for ii = 1:length(Farms_poly)
                          cvhmDomain.X, cvhmDomain.Y);
                      
     tempW = CVHMwells(in_wells,1);
+    
+    
+    QD_PDF = Calc_2D_PDF(log10([tempW.Q]'), log10([tempW.depth]'));
+    %surf(QD_PDF.GridVectors{1,1},QD_PDF.GridVectors{1,2},QD_PDF.Values,'edgecolor','none')
+    % plot(log10([tempW.Q]'), log10([tempW.depth]'),'.')
+    DS_PDF = Calc_2D_PDF(log10([tempW.depth]'), log10([tempW.bot]' - [tempW.top]'));
+    % surf(DS_PDF.GridVectors{1,1},DS_PDF.GridVectors{1,2},DS_PDF.Values,'edgecolor','none')
+    % plot(log10([tempW.depth]'), log10([tempW.bot]' - [tempW.top]'),'.')
+    
+    tempW_mod = tempW;
+    for jj = 1:length(tempW)
+        jj
+        [ Qr, Dr, Sr ] = AssignQDS_v2(QD_PDF, DS_PDF, ...
+                                    log10(tempW(jj,1).Q), ...
+                                    log10(tempW(jj,1).depth), ...
+                                    log10(tempW(jj,1).bot - tempW(jj,1).top));
+         tempW_mod(jj,1).Q = 10^Qr;
+         tempW_mod(jj,1).depth = 10^Dr;
+         tempW_mod(jj,1).SL = 10^Sr;
+    end
+    continue;
+    
      
-    ipub = find([tempW.type]'==1);
-    iag = find([tempW.type]'==0);
-    tempWpb = tempW(ipub,1);
-    tempWag = tempW(iag,1);
-    tempWag_mod = tempWag;
-    tempWpb_mod = tempWpb;
-    if length(tempWpb_mod) < 15
-        % use all public records that belong to basin
-        ibas = Farm_basin(ii,1).Basins;
-        in_basin = false(length(CVHMwells),1);
-        for kk = 1:length(Farm_basin)
-            if Farm_basin(kk,1).Basins ~= ibas
-                continue;
-            end
-            in_basin(inpolygon([CVHMwells.X]',[CVHMwells.Y]', ...
-                         Farm_basin(kk,1).X, Farm_basin(kk,1).Y)) = true;
-        end
-        tempWbas = CVHMwells(in_basin,1);
-        ipub = find([tempWbas.type]'==1);
-        tempWpb = tempWbas(ipub,1);
-    end
-
-    % ----------AG wells --------
-    %%% Pumping ECDF
-    idQ = ~isnan([tempWag.Q]') & [tempWag.Q]' > 0; % isolate the records that have pumping
-    display(sum(idQ))
-    logQ = log10([tempWag(idQ,1).Q]');
-    [fQ, xQ]=ecdf(logQ); % create an ECDF based on the data
-    
-    %%% Depth ECDF
-    idD = ~isnan([tempWag.depth]') & [tempWag.depth]' > 0;
-    display(sum(idD))
-    logD = log10([tempWag(idD,1).depth]');
-    [fD, xD]=ecdf(logD);
-    
-    %%% Screen length ECDF
-    tempSL = [tempWag.bot]' - [tempWag.top]';
-    idS = ~isnan(tempSL) & tempSL < 2000  & tempSL > 0;
-    display(sum(idS))
-    logS = log10([tempWag(idS,1).bot]' - [tempWag(idS,1).top]');
-    [fS, xS]=ecdf(logS);
-    
-    clear Stats
-    Stats.fQ = fQ; Stats.lowQ = 0.15;
-    Stats.xQ = xQ; Stats.uppQ = 0.85;
-    Stats.fD = fD; Stats.lowD = 0;
-    Stats.xD = xD; Stats.uppD = 1;
-    Stats.fS = fS; Stats.lowS = 0;
-    Stats.xS = xS; Stats.uppS = 1;
-    
-    for jj = 1:length(tempWag_mod)
-        [ tempWag_mod(jj,1).Q, ...
-          tempWag_mod(jj,1).depth, ...
-          tempWag_mod(jj,1).SL ] = AssignQDS(Stats, ...
-                                             tempWag_mod(jj,1).Q, ...
-                                             tempWag_mod(jj,1).depth, ...
-                                             tempWag_mod(jj,1).bot - tempWag_mod(jj,1).top);
-    end
-
-    
-    % --------------- Urban wells-------------
-    %%% Pumping ECDF
-    idQ = ~isnan([tempWpb.Q]') & [tempWpb.Q]' > 0; % isolate the records that have pumping
-    display(sum(idQ))
-    if sum(idQ) < 15
-        % use all public records that belong to basin
-        ibas = Farm_basin(ii,1).Basins;
-        in_basin = false(length(CVHMwells),1);
-        for kk = 1:length(Farm_basin)
-            if Farm_basin(kk,1).Basins ~= ibas
-                continue;
-            end
-            in_basin(inpolygon([CVHMwells.X]',[CVHMwells.Y]', ...
-                         Farm_basin(kk,1).X, Farm_basin(kk,1).Y)) = true;
-        end
-        tempWbas = CVHMwells(in_basin,1);
-        ipub = find([tempWbas.type]'==1);
-        tempWpbQ = tempWbas(ipub,1);
-        idQ = ~isnan([tempWpbQ.Q]') & [tempWpbQ.Q]' > 0;
-        display(sum(idQ))
-        logQ = log10([tempWpbQ(idQ,1).Q]');
-        [fQ, xQ]=ecdf(logQ);
-    else
-        logQ = log10([tempWpb(idQ,1).Q]');
-        [fQ, xQ]=ecdf(logQ);
-    end
+%     ipub = find([tempW.type]'==1);
+%     iag = find([tempW.type]'==0);
+%     tempWpb = tempW(ipub,1);
+%     tempWag = tempW(iag,1);
+%     figure(1);clf
+%     figure(1); plot([tempWag.Q]',[tempWag.depth]','.b')
+%     figure(1); hold on
+%     figure(1); plot([tempWpb.Q]',[tempWpb.depth]','.r')
+%     
+%     figure(2);clf
+%     figure(2); plot([tempWag.depth]',[tempWag.bot]' - [tempWag.top]','.b')
+%     figure(2); hold on
+%     figure(2); plot([tempWpb.depth]',[tempWpb.bot]' - [tempWpb.top]','.r')
+%     continue;
     
     
-    
-    %%% Depth ECDF
-    idD = ~isnan([tempWpb.depth]') & [tempWpb.depth]' > 0;
-    display(sum(idD))
-    logD = log10([tempWpb(idD,1).depth]');
-    [fD, xD]=ecdf(logD);
-    
-    %%% Screen length ECDF
-    tempSL = [tempWpb.bot]' - [tempWpb.top]';
-    idS = ~isnan(tempSL) & tempSL < 2000  & tempSL > 0;
-    display(sum(idS))
-    logS = log10([tempWpb(idS,1).bot]' - [tempWpb(idS,1).top]');
-    [fS, xS]=ecdf(logS);
-    
-    clear Stats
-    Stats.fQ = fQ; Stats.lowQ = 0.15;
-    Stats.xQ = xQ; Stats.uppQ = 0.85;
-    Stats.fD = fD; Stats.lowD = 0;
-    Stats.xD = xD; Stats.uppD = 1;
-    Stats.fS = fS; Stats.lowS = 0;
-    Stats.xS = xS; Stats.uppS = 1;
-    
-    for jj = 1:length(tempWpb_mod)
-        [ tempWpb_mod(jj,1).Q, ...
-          tempWpb_mod(jj,1).depth, ...
-          tempWpb_mod(jj,1).SL ] = AssignQDS(Stats, ...
-                                             tempWpb_mod(jj,1).Q, ...
-                                             tempWpb_mod(jj,1).depth, ...
-                                             tempWpb_mod(jj,1).bot - tempWpb_mod(jj,1).top);
-    end
+%     tempWag_mod = tempWag;
+%     tempWpb_mod = tempWpb;
+%     if length(tempWpb_mod) < 15
+%         % use all public records that belong to basin
+%         ibas = Farm_basin(ii,1).Basins;
+%         in_basin = false(length(CVHMwells),1);
+%         for kk = 1:length(Farm_basin)
+%             if Farm_basin(kk,1).Basins ~= ibas
+%                 continue;
+%             end
+%             in_basin(inpolygon([CVHMwells.X]',[CVHMwells.Y]', ...
+%                          Farm_basin(kk,1).X, Farm_basin(kk,1).Y)) = true;
+%         end
+%         tempWbas = CVHMwells(in_basin,1);
+%         ipub = find([tempWbas.type]'==1);
+%         tempWpb = tempWbas(ipub,1);
+%     end
+% 
+%     % ----------AG wells --------
+%     %%% Pumping ECDF
+%     idQ = ~isnan([tempWag.Q]') & [tempWag.Q]' > 0; % isolate the records that have pumping
+%     display(sum(idQ))
+%     logQ = log10([tempWag(idQ,1).Q]');
+%     [fQ, xQ]=ecdf(logQ); % create an ECDF based on the data
+%     
+%     %%% Depth ECDF
+%     idD = ~isnan([tempWag.depth]') & [tempWag.depth]' > 0;
+%     display(sum(idD))
+%     logD = log10([tempWag(idD,1).depth]');
+%     [fD, xD]=ecdf(logD);
+%     
+%     %%% Screen length ECDF
+%     tempSL = [tempWag.bot]' - [tempWag.top]';
+%     idS = ~isnan(tempSL) & tempSL < 2000  & tempSL > 0;
+%     display(sum(idS))
+%     logS = log10([tempWag(idS,1).bot]' - [tempWag(idS,1).top]');
+%     [fS, xS]=ecdf(logS);
+%     
+%     clear Stats
+%     Stats.fQ = fQ; Stats.lowQ = 0.15;
+%     Stats.xQ = xQ; Stats.uppQ = 0.85;
+%     Stats.fD = fD; Stats.lowD = 0;
+%     Stats.xD = xD; Stats.uppD = 1;
+%     Stats.fS = fS; Stats.lowS = 0;
+%     Stats.xS = xS; Stats.uppS = 1;
+%     
+%     for jj = 1:length(tempWag_mod)
+%         [ tempWag_mod(jj,1).Q, ...
+%           tempWag_mod(jj,1).depth, ...
+%           tempWag_mod(jj,1).SL ] = AssignQDS(Stats, ...
+%                                              tempWag_mod(jj,1).Q, ...
+%                                              tempWag_mod(jj,1).depth, ...
+%                                              tempWag_mod(jj,1).bot - tempWag_mod(jj,1).top);
+%     end
+% 
+%     
+%     % --------------- Urban wells-------------
+%     %%% Pumping ECDF
+%     idQ = ~isnan([tempWpb.Q]') & [tempWpb.Q]' > 0; % isolate the records that have pumping
+%     display(sum(idQ))
+%     if sum(idQ) < 15
+%         % use all public records that belong to basin
+%         ibas = Farm_basin(ii,1).Basins;
+%         in_basin = false(length(CVHMwells),1);
+%         for kk = 1:length(Farm_basin)
+%             if Farm_basin(kk,1).Basins ~= ibas
+%                 continue;
+%             end
+%             in_basin(inpolygon([CVHMwells.X]',[CVHMwells.Y]', ...
+%                          Farm_basin(kk,1).X, Farm_basin(kk,1).Y)) = true;
+%         end
+%         tempWbas = CVHMwells(in_basin,1);
+%         ipub = find([tempWbas.type]'==1);
+%         tempWpbQ = tempWbas(ipub,1);
+%         idQ = ~isnan([tempWpbQ.Q]') & [tempWpbQ.Q]' > 0;
+%         display(sum(idQ))
+%         logQ = log10([tempWpbQ(idQ,1).Q]');
+%         [fQ, xQ]=ecdf(logQ);
+%     else
+%         logQ = log10([tempWpb(idQ,1).Q]');
+%         [fQ, xQ]=ecdf(logQ);
+%     end
+%     
+%     
+%     
+%     %%% Depth ECDF
+%     idD = ~isnan([tempWpb.depth]') & [tempWpb.depth]' > 0;
+%     display(sum(idD))
+%     logD = log10([tempWpb(idD,1).depth]');
+%     [fD, xD]=ecdf(logD);
+%     
+%     %%% Screen length ECDF
+%     tempSL = [tempWpb.bot]' - [tempWpb.top]';
+%     idS = ~isnan(tempSL) & tempSL < 2000  & tempSL > 0;
+%     display(sum(idS))
+%     logS = log10([tempWpb(idS,1).bot]' - [tempWpb(idS,1).top]');
+%     [fS, xS]=ecdf(logS);
+%     
+%     clear Stats
+%     Stats.fQ = fQ; Stats.lowQ = 0.15;
+%     Stats.xQ = xQ; Stats.uppQ = 0.85;
+%     Stats.fD = fD; Stats.lowD = 0;
+%     Stats.xD = xD; Stats.uppD = 1;
+%     Stats.fS = fS; Stats.lowS = 0;
+%     Stats.xS = xS; Stats.uppS = 1;
+%     
+%     for jj = 1:length(tempWpb_mod)
+%         [ tempWpb_mod(jj,1).Q, ...
+%           tempWpb_mod(jj,1).depth, ...
+%           tempWpb_mod(jj,1).SL ] = AssignQDS(Stats, ...
+%                                              tempWpb_mod(jj,1).Q, ...
+%                                              tempWpb_mod(jj,1).depth, ...
+%                                              tempWpb_mod(jj,1).bot - tempWpb_mod(jj,1).top);
+%     end
     
     
     
@@ -338,7 +390,9 @@ end
 WELLS4CVHM(17,:) = [];
 %
 %% Scale the pumping rates to match the desired pumping
-Total_pump_vol = 32150091.788555; %m^3/day
+% RCH : 25715545.162923 m^3/day
+% STRM: 899912.211251 m^3/day
+Total_pump_vol = 25715545.162923 + 899912.211251; %m^3/day
 Min_pumping = 400;
 init_vol = abs(sum([WELLS4CVHM.UrbanPump]')) + abs(sum([WELLS4CVHM.AgPump]'));
 for ii = 1:length(WELLS4CVHM)

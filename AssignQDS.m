@@ -5,7 +5,7 @@ function [ Q_out, D_out, SL_out ] = AssignQDS(S, Q_in, D_in, SL_in )
 % - Always generate Q, D, SL in that order
 % - When the SL and D are both known we use only the SL to generate Q because
 %   it is possible that a deeper well has sort SL and small Q but highly
-%   unlikely a sort deep well has large Q
+%   unlikely a short deep well has large Q
 %
 
 ww = 0.15;

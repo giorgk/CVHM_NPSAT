@@ -5,7 +5,7 @@
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
         integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
         crossorigin=""/>
-        <!-- Make sure you put this AFTER Leaflet's CSS -->
+        // Make sure you put this AFTER Leaflet's CSS 
         <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
         integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
         crossorigin=""></script>
@@ -13,26 +13,139 @@
         <style>
             .legend { text-align: left; line-height: 20px; color: #111; } .legend i { width: 20px; height: 20px; float: left; margin-right: 8px; opacity: 0.8; }
         </style>
+        
+        <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+        
+        
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+        <script type="text/javascript" src="/home/giorgk/Documents/leaflet-dvf/examples/lib/bootstrap/js/bootstrap.min.js"></script>
+<!--        <script type="text/javascript" src="/home/giorgk/Documents/leaflet-dvf/examples/lib/leaflet/leaflet.js"></script>-->
+        <script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.5/leaflet.js"></script>
+        <script type="text/javascript" src="/home/giorgk/Documents/leaflet-dvf/examples/lib/jsts/javascript.util.js"></script>
+        <script type="text/javascript" src="/home/giorgk/Documents/leaflet-dvf/examples/lib/jsts/jsts.js"></script>
+        <script type="text/javascript" src="/home/giorgk/Documents/leaflet-dvf/examples/lib/date.format.js"></script>
+        <script type="text/javascript" src="/home/giorgk/Documents/leaflet-dvf/examples/lib/geohash.js"></script>
+<!--        <script type="text/javascript" src="/home/giorgk/Documents/leaflet-dvf/dist/leaflet-dvf.markers.js"></script>-->
+<!--        <script type="text/javascript" src="/home/giorgk/Documents/leaflet-dvf/dist/leaflet-dvf.markers.js"></script>-->
+        
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-dvf/0.3.1/leaflet-dvf.markers.min.js"></script>
+        
+<!--        <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.4"></script>-->
+
+        
+        
+        <script type="text/javascript" src="Jscripts/WellGenStat.js"></script>
+        
+        <script type="text/javascript">
+            window.onload = function (){
+                var tri = "3";
+                var WellYearChart = new CanvasJS.Chart("chartWellsConstruct", {
+                    theme: "light1",
+                    animationEnabled: true,
+                    zoomEnabled: true,
+                    title:{
+                        text: "Well construction dates in Central Valley"
+                    },
+                    axisY: {
+                        title: "Number of wells",
+                        lineColor: "#4F81BC",
+                        tickColor: "#4F81BC",
+                        labelFontColor: "#4F81BC"
+                    },
+                    axisY2: {
+                        title: "# of Wells after year [x1000]",
+                        lineColor: "#C0504E",
+                        tickColor: "#C0504E",
+                        labelFontColor: "#C0504E"
+                    },
+                    data: [{
+                        type: "stepArea",
+                        markerSize: 5,
+                        xValueFormatString: "YYYY",
+                        dataPoints: wellConstrHist
+                    },
+                    {
+                       type:"line",
+                       axisYType: "secondary",
+                       dataPoints: wellConstrCumul
+                   }
+                  ]
+                });
+                WellYearChart.render();
+            }
+        </script>
     
     </head>
     
     <body>
         <h1>Well data analysis</h1>
-        <h2>CVHM well data</h2>
+        The distribution of pumping in the CVHM is based on the water demand and the actual location and number of the wells is not taken account. In out modelling approach we try to honor the water budget that it is dictated by the CVHM model, however we attempt to take into account the actual well locations during the distribution of pumping within each CVHM farm.<br/>
+        Details regarding the well dataset used in the following document can be found in the
+        <a href="https://richpauloo.github.io/oswcr_1.html" target="_blank">Exploratory Data Analysis of California’s Well Completion Reports</a>.
         
+        <p>
+            The well database that was extracted from the original database contains <b>50,627</b> records. When we exclude the wells with unknown or erroneous (190, 2028 etc) construction year the number of wells records is <b>47,510</b>.
+        </p>
+        <div id="chartWellsConstruct" style="height: 400px; width: 60%;"></div>
+        <p>
+            The majority of the wells have been constructed after 1950. In the well generation algorithm we use the relatively new wells (e.g less than 20-30 years old). The red line the number of wells that are left in the database if we exclude the ones that are older than the selected year. For example we see that there are approximately 5,000 wells that are 10 years old. In our calculations we set the age threshold for public and agricultural wells equal to 30 years. We can see that there are about 18,000 wells that constructed after the year 1988. In addition we see that those 18,000 wells are spread out across the entire Central Valley.
+        </p>
         
-        <div id="mapid" style="width: 700px; height: 900px; position: relative;"></div>
-    
-        <script type="text/javascript" src="Jscripts/FMP_active_4326.js"></script>
-        <script type="text/javascript" src="Jscripts/FARMS_Pump_4326.js"></script>
+        <div id="mapWellsnew" style="width: 500px; height: 700px; position: relative;"></div>
+        <p> The location of the majority of the wells is based on 
+            <a href="https://nationalmap.gov/small_scale/a_plss.html" target="_blank"> township range and section</a>, therefore many wells share the same coordinates. To make it possible to click on the we have add a random perturbation to the coordinates so that they do not coinside while on maximum zoom level. 
+        
+        </p>
+        <script type="text/javascript" src="Jscripts/CVwells_30y_4326.js"></script>
         <script>
-            var mymap = L.map('mapid').setView([38, -121.1], 8);
+            var wellMap = L.map('mapWellsnew').setView([38, -121.1], 8);
             L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
                 attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
                 maxZoom: 18,
                 id: 'mapbox.streets',
                 accessToken: 'pk.eyJ1IjoiZ2lvcmdrIiwiYSI6ImNqc3h4Zmc3MjBqcmg0OXF4Y2E4Z3VwazMifQ.AIQu1J0MjGvQJ-B4KM5XHw'
-            }).addTo(mymap);
+            }).addTo(wellMap);
+            var myRenderer = L.canvas({ padding: 0.1 });
+            //console.log(CVwells_30y.features.length);
+            
+            for (var i = 0; i < CVwells_30y.features.length; i += 1){
+                //console.log(CVwells_30y.features[i].geometry.coordinates[0])
+                L.circleMarker([CVwells_30y.features[i].geometry.coordinates[1] + 0.0005*Math.random(), CVwells_30y.features[i].geometry.coordinates[0] + 0.0005*Math.random()], {
+                    renderer: myRenderer
+                  }).setRadius(5).addTo(wellMap).bindPopup('WCRNumber: ' + CVwells_30y.features[i].properties.WCRNumber + '<br/> Top: ' + CVwells_30y.features[i].properties.top + 
+                  '<br/> Bottom: ' + CVwells_30y.features[i].properties.bot + 
+                  '<br/> Depth: ' + CVwells_30y.features[i].properties.depth + 
+                  '<br/> Year: ' + CVwells_30y.features[i].properties.year + 
+                  '<br/> Q: ' + CVwells_30y.features[i].properties.Q);
+            }
+            
+            //L.geoJson(CVwells_30y).addTo(wellMap);
+            
+        </script>
+        
+        
+        <h2>CVHM well data</h2>
+        <p> In our modeling approach the pumping rates will be based on the CVHM groundwater pumping while the locations of the wells will be based on the actual well data. For each farm we calculated the amount of pumped water used for Urban and Agricultural based on the land use map of 2000 which is show in the map below. Therefore, for each farm we sum the pumping rates that lay on urban/developed cells and cluster them as Urban and those that lay on the remaining landuse types and clustered them as Agricultural. 
+        </p>
+        
+        
+        <div id="frmsmapid" style="width: 700px; height: 900px; position: relative;"></div>
+    
+        <script type="text/javascript" src="Jscripts/FMP_active_4326.js"></script>
+        <script type="text/javascript" src="Jscripts/FARMS_Pump_4326.js"></script>
+        <script>
+            var frmmap = L.map('frmsmapid').setView([38, -121.1], 8);
+            
+            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                maxZoom: 18,
+                id: 'mapbox.streets',
+                accessToken: 'pk.eyJ1IjoiZ2lvcmdrIiwiYSI6ImNqc3h4Zmc3MjBqcmg0OXF4Y2E4Z3VwazMifQ.AIQu1J0MjGvQJ-B4KM5XHw'
+            }).addTo(frmmap);
+            
+            //var baseLayer = new L.StamenTileLayer('toner', {
+            //    detectRetina: true
+            //}).addTo(frmmap);
             
             
             
@@ -63,8 +176,8 @@
                 };
             }
             
-            L.geoJson(geojsonFMP, {style: FMPstyle}).addTo(mymap);
-            L.geoJson(FarmsPump, {style: FARMSstyle}).addTo(mymap);
+            L.geoJson(geojsonFMP, {style: FMPstyle}).addTo(frmmap);
+            L.geoJson(FarmsPump, {style: FARMSstyle}).addTo(frmmap);
             
             var legend = L.control({position: 'bottomright'});
             legend.onAdd = function (map){
@@ -77,8 +190,51 @@
                 }
                 return div;
             };
-            legend.addTo(mymap)
+            legend.addTo(frmmap);
             
+            //console.log(FarmsPump);
+            
+            var pieChartOpt = {
+                recordsField: 'features',
+                locationMode: 'latlng', //L.LocationModes.LATLNG,
+                latitudeField: 'properties.CY',
+                longitudeField: 'properties.CX',
+                chartOptions: {
+                    'properties.UrbanPump':{
+                        displayName: 'Urban',
+                        color: 'hsl(0,100%,25%)',
+					    fillColor: 'hsl(0,80%,55%)',
+                    },
+                    'properties.AgPump':{
+                        displayName: 'Ag',
+                        color: 'hsl(240,100%,25%)',
+					    fillColor: 'hsl(240,80%,55%)',
+                        radius : 20*Math.random()
+                    }
+                },
+                layerOptions: {
+                    fillOpacity: 0.8,
+                    opacity: 1,
+                    weight: 1,
+                    radius: 25
+                },
+                tooltipOptions: {
+                    iconSize: new L.Point (50,50),
+                    iconAnchor: new L.Point (-5,50)
+                },
+                /*onEachRecord: function (layer,record) {
+                    var $html = $(L.HTMLUtils.buildTable(record));
+
+                    layer.bindPopup($html.wrap('<div/>').parent().html(),{
+                        minWidth: 400,
+                        maxWidth: 400
+                    });
+                }*/
+            };
+            
+            //L.PieChartDataLayer(FarmsPump,pieChartOpt).addTo(frmmap);
+            var PumpingPieCharts = new L.PieChartDataLayer(FarmsPump,pieChartOpt);
+           frmmap.addLayer(PumpingPieCharts);
             
             
             

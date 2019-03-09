@@ -256,8 +256,8 @@ StrmAvNeg_91_03 = sum([bud.QstrmNeg_91_03]'./TotDays2)/10^6;
 
 
 %% Average Streams
-AVstrm = STRLK.data(:,istart1:iend1); %m^3/day
-ym = STRLK.ym(istart1:iend1,:);
+AVstrm = STRLK.data(:,istart2:iend2); %m^3/day
+ym = STRLK.ym(istart2:iend2,:);
 totdays = 0;
 for ii = 1:size(AVstrm,2)
     totdays = totdays + eomday(ym(ii,1), ym(ii,2));
@@ -265,6 +265,7 @@ for ii = 1:size(AVstrm,2)
 end
 AVstrm = sum(AVstrm,2)/totdays; %m^3/day Average over the period of interest
 STRMS = [STRLK.rc AVstrm];
+fprintf('%f\n',sum(STRMS(:,4)))
 %%
 save('AvStresses','STRMS')
 %% Average Recharge
@@ -276,6 +277,7 @@ for ii = istart2:iend2
     AVrch = AVrch + RCH.data{ii,1}*eomday(RCH.ym(ii,1), RCH.ym(ii,2)); %m^3/month;
 end
 AVrch = AVrch/totdays;
+fprintf('%f\n',sum(sum(AVrch)))
 %%
 save('AvStresses','AVrch','-append')
 %% Prepare recharge for writing to Scattered format

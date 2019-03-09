@@ -109,6 +109,8 @@ writeMeshfile('CVHM_mesh_modif.npsat', msh_nd, msh_el);
 % elevation is set equal to the average hydraulic head.
 %% expand the nodes by a mile
 buff = shaperead('gis_data/CVHM_Mesh_outline_buffer');
+%% or
+load('BufferPnts.mat')
 % make unique list of buffer outline points
 buff_pnt = [buff(1,1).X(1) buff(1,1).Y(1)];
 for ii = 1:length(buff(1,1).X) - 1
