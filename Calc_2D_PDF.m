@@ -1,4 +1,4 @@
-function PDF = Calc_2D_PDF(X, Y)
+function PDF = Calc_2D_PDF(X, Y, s)
 %% generated 2D propability density functions
 
 in = ~isnan(X) & ~isnan(Y) & ~isinf(X) & ~isinf(Y);
@@ -7,24 +7,27 @@ Y = Y(in);
 
 xlm = [min(X) max(X)];
 ylm = [min(Y) max(Y)];
-dx = linspace(xlm(1), xlm(2), 100);
-dy = linspace(ylm(1), ylm(2), 100);
-dx_n = linspace(0, 100, 100);
-dy_n = linspace(0,100, 100);
+dx = linspace(xlm(1), xlm(2), 101);
+dy = linspace(ylm(1), ylm(2), 101);
+dx_n = linspace(0, 100, 101);
+dy_n = linspace(0,100, 101);
 % rescale
 X_n = interp1(dx, dx_n, X);
 Y_n = interp1(dy, dy_n, Y);
+
+[Xg, Yg] = meshgrid(0:100);
 %
-%%
-w = 20;
-V = zeros(length(dx_n),length(dy_n));
-for ii = 1:length(dx_n)
-    for jj = 1:length(dy_n)
-        % find the number of points inside the kernel
-        dst = sqrt((dx_n(ii) - X_n).^2 + (dy_n(jj) - Y_n).^2);
-        V(jj,ii) = sum(dst < w);
-    end
+% Radial basis function
+nrm = @(x,y) sqrt((Xg - x).^2 + (Yg - y).^2);
+phi = @(r,s) exp(-(r./s).^2);
+V = zeros(size(Xg));
+for ii = 1:length(X_n)
+    xm = X_n(ii);
+    ym = Y_n(ii);
+    V = V + phi(nrm(xm, ym),s);
 end
+
+%
 V = V./max(max(V));
 PDF.X = dx;
 PDF.Y = dy;

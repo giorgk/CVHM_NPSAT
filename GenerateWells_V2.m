@@ -94,6 +94,8 @@ shapewrite(Sact, '/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwells_30y'
 % each cell.
 Bas = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/BAS_active.shp');
 %%
+load('gis_data/BAS_active_shp')
+Bas = bas_active;
 for ii = [1 2 3 45 6 7 8 9 10]
     Bas = rmfield(Bas,['lay' num2str(ii) '_act']);
 end
@@ -126,75 +128,67 @@ for ii=1:510
     m = m + 1;
 end
 %% OR
-load('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/Well_Budget.mat');
+%load('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/Well_Budget.mat');
+load('/media/giorgk/DATA/giorgk/Documents/CVHM_DATA/WellData/Well_Budget.mat');
 %% 
-yr = 1977; % year start
-mnt = 10; % month start
-ye = 2003; % year end
-me = 2; % month end
-Ndays = [];
-while 1
-    Ndays = [Ndays; eomday(yr,mnt)];
-    mnt = mnt + 1;
-    if mnt > 12
-        mnt = 1;
-        yr = yr + 1;
-    end
-    if yr == ye && mnt > me
-        break;
-    end
+Ndays = 0;
+for ii = 1:size(Welldates,1)
+    Ndays(ii,1) = eomday(Welldates(ii,1),Welldates(ii,2));
 end
 %
 %% Average the stresses for the simulation period
 % get istart and iend from GWaterBudget_calc
-iid = istart:iend;
 MNW = zeros(441, 98);
 FRW = zeros(441, 98);
-for ii = 1:length(Ndays)
-    for jj = 1:size(FARMWELLS{iid(ii),1},1)
-        FRW(FARMWELLS{iid(ii),1}(jj,2), FARMWELLS{iid(ii),1}(jj,3)) = ...
-            FRW(FARMWELLS{iid(ii),1}(jj,2), FARMWELLS{iid(ii),1}(jj,3)) + ...
-            FARMWELLS{iid(ii),1}(jj,4)*Ndays(ii,1);
+totdays = 0;
+for ii = istart2:iend2
+    totdays = totdays + Ndays(ii,1);
+    for jj = 1:size(FARMWELLS{ii,1},1)
+        FRW(FARMWELLS{ii,1}(jj,2), FARMWELLS{ii,1}(jj,3)) = ...
+            FRW(FARMWELLS{ii,1}(jj,2), FARMWELLS{ii,1}(jj,3)) + ...
+            FARMWELLS{ii,1}(jj,4)*Ndays(ii,1);
     end
-    for jj = 1:size(MNWELLS{iid(ii),1},1)
-        MNW(MNWELLS{iid(ii),1}(jj,2), MNWELLS{iid(ii),1}(jj,3)) = ...
-            MNW(MNWELLS{iid(ii),1}(jj,2), MNWELLS{iid(ii),1}(jj,3)) + ...
-            MNWELLS{iid(ii),1}(jj,4)*Ndays(ii,1);
+    for jj = 1:size(MNWELLS{ii,1},1)
+        MNW(MNWELLS{ii,1}(jj,2), MNWELLS{ii,1}(jj,3)) = ...
+            MNW(MNWELLS{ii,1}(jj,2), MNWELLS{ii,1}(jj,3)) + ...
+            MNWELLS{ii,1}(jj,4)*Ndays(ii,1);
     end
 end
-FRW = FRW./sum(Ndays);
-MNW = MNW./sum(Ndays);
+FRW = FRW./totdays;
+MNW = MNW./totdays;
 %% add the well rates to CVHM_wells shapefiles
 for ii = 1:size(CVHM_wells,1)
     CVHM_wells(ii,1).farm = FRW(CVHM_wells(ii,1).ROW, CVHM_wells(ii,1).COLUMN_);
     CVHM_wells(ii,1).mnw = MNW(CVHM_wells(ii,1).ROW, CVHM_wells(ii,1).COLUMN_);
 end
+%%
 shapewrite(CVHM_wells, 'gis_data/CVHM_wellBud');
 %
 %% Find the volume of water that is used for Urban and Ag for each farm
-CVHMwells = shaperead('gis_data/CVHM_wellBud');
-Farms = shaperead('gis_data/FMP.shp');
-Farms_poly = shaperead('gis_data/FARMS_poly.shp');
+%CVHM_wells = shaperead('gis_data/CVHM_wellBud');
+load('gis_data/FMP_shp'); %Farms = shaperead('gis_data/FMP.shp');
+load('gis_data/FARMS_poly_shp'); %Farms_poly = shaperead('gis_data/FARMS_poly.shp');
 for ii = 1:length(Farms_poly)
     Farms_poly(ii,1).UrbanPump = 0;
     Farms_poly(ii,1).AgPump = 0;
 end
 ROWfrm = [Farms.ROW]';
 COLfrm = [Farms.COLUMN_]';
-%
-for ii = 1:size(CVHMwells,1)
-    r = CVHMwells(ii,1).ROW;
-    c = CVHMwells(ii,1).COLUMN_;
+%%
+for ii = 1:size(CVHM_wells,1)
+    r = CVHM_wells(ii,1).ROW;
+    c = CVHM_wells(ii,1).COLUMN_;
     ir = find(ROWfrm == r & COLfrm == c);
     ifarm = find([Farms_poly.dwr_sbrgns]' == Farms(ir,1).dwr_sbrgns);
     if Farms(ir,1).LU_2000 == 2
         Farms_poly(ifarm,1).UrbanPump = Farms_poly(ifarm,1).UrbanPump + ...
-            CVHMwells(ii,1).farm + CVHMwells(ii,1).mnw;
+            CVHM_wells(ii,1).farm + CVHM_wells(ii,1).mnw;
     else
         Farms_poly(ifarm,1).AgPump = Farms_poly(ifarm,1).AgPump + ...
-            CVHMwells(ii,1).farm + CVHMwells(ii,1).mnw;
+            CVHM_wells(ii,1).farm + CVHM_wells(ii,1).mnw;
     end
 end
+%%
 shapewrite(Farms_poly, 'gis_data/FARMS_polyPump.shp');
 %
 %% Generate Pumping wells
@@ -202,20 +196,243 @@ Farm_basin = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS
 Farms_poly = shaperead('gis_data/FARMS_polyPump.shp');
 CVHMwells = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwells_30y_proj.shp');
 cvhmDomain = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/BAS_active_outline.shp');
-%%
-load('gis_data/WellGenerationSHP');
-Farm_basin =Farm_basin';
-Farms_poly = Farms_poly';
-CVHMwells = CVHMwells';
 %}
 %%
+clear
+clc
+do_plot = false;
+load('gis_data/WellGenerationSHP','Farm_basin','cvhmDomain','CVHMwells');
+Farm_basin = Farm_basin';
+CVHMwells = CVHMwells';
+load('gis_data/FARMS_polyPump_91_03.mat')
+
+% RCH : 25715545.162923 m^3/day
+% STRM: 899912.211251 m^3/day
+Total_pump_vol = 25715545.162923 + 899912.211251; %m^3/day
+Act_pump_vol = abs(sum([Farms_poly.AgPump]')+sum([Farms_poly.UrbanPump]'));
+corr_ratio = Total_pump_vol/Act_pump_vol;
+
+% prepare the streams for vectorized distance calculations
+load('gis_data/CVHM_streams_shp');
+stream_L = [];
+for ii = 1:length(CVHM_streams)
+    for jj = 1:length(CVHM_streams(ii,1).X)-1
+        l = [CVHM_streams(ii,1).X(jj) CVHM_streams(ii,1).Y(jj) CVHM_streams(ii,1).X(jj+1) CVHM_streams(ii,1).Y(jj+1)];
+        if ~any(isnan(l))
+            stream_L = [stream_L;l];
+        end
+    end
+end
+
+%
+% Generate random pumping
+Ql = 0.15;
+Qh = 0.90;
+WX = nan(20000,1); WY = nan(20000,1); cnt = 1;
+clear Wells_Gen;
+for ii = 1:length(Farms_poly)
+    if Farms_poly(ii,1).dwr_sbrgns == 0
+        continue;
+    end
+    disp(['Farm: ' num2str(Farms_poly(ii,1).dwr_sbrgns) ' [' num2str(ii) ']'])
+    in_wells = inpolygon([CVHMwells.X]',[CVHMwells.Y]', ...
+                         Farms_poly(ii,1).X, Farms_poly(ii,1).Y) & ... 
+               inpolygon([CVHMwells.X]',[CVHMwells.Y]', ...
+                         cvhmDomain.X, cvhmDomain.Y);
+    tempW = CVHMwells(in_wells,1);
+    ipb = find([tempW.type]'==1);
+    iag = find([tempW.type]'==0);
+
+    tempWpb = tempW(ipb,1);
+    tempWag = tempW(iag,1);
+    
+    figure(1); clf
+    figure(1); plot([tempWpb.X]',[tempWpb.Y]','or')
+    figure(1); hold on
+    figure(1); plot([tempWag.X]',[tempWag.Y]','.b')
+    figure(1); axis equal
+    AG_pdf = Calc_2D_PDF([tempWag.X]',[tempWag.Y]', 15);
+    PB_pdf = Calc_2D_PDF([tempWpb.X]',[tempWpb.Y]', 15);
+    
+    figure(2); clf
+    figure(2); plot([tempWag.X]',[tempWag.Y]','+r')
+    figure(2);hold on
+    figure(2);surf(AG_pdf.X,AG_pdf.Y,AG_pdf.V,'edgecolor','none')
+    figure(2); view(0,90)
+    figure(2); alpha(0.5)
+    figure(2); axis equal
+    drawnow
+    
+    figure(3); clf
+    figure(3); plot([tempWpb.X]',[tempWpb.Y]','+r')
+    figure(3);hold on
+    figure(3);surf(PB_pdf.X,PB_pdf.Y,PB_pdf.V,'edgecolor','none')
+    figure(3); view(0,90)
+    figure(3); alpha(0.5)
+    figure(3); axis equal
+    drawnow
+    
+    
+    % Pumping distribution (different for Ag-Urban wells unless there are
+    % very few urban wells in the farm.
+    Qag = [tempW(iag,1).Q]';
+    Qpb = [tempW(ipb,1).Q]';
+    Qag(isnan(Qag), :) = [];
+    Qpb(isnan(Qpb), :) = [];
+    Qag(Qag <= 0, :) = [];
+    Qpb(Qpb <= 0, :) = [];
+    [xag, fag] = ecdf(log10(Qag));
+    if length(Qpb) < 5
+        Qpb = [Qpb;Qag];
+    end
+    [xpb, fpb] = ecdf(log10(Qpb));
+    figure(4); clf
+    figure(4); plot(fag, xag, 'b')
+    figure(4); hold on
+    figure(4); plot(fpb, xpb, 'r')
+    drawnow
+    
+    %Pumping - depth distribution
+    Qtemp = [tempW.Q]';
+    Dtemp = [tempW.depth]';
+    id = find(~isnan(Qtemp) & ~isnan(Dtemp));
+    Qtemp = Qtemp(id);
+    Dtemp = Dtemp(id);
+    id = find(Qtemp > 0 & Dtemp > 0);
+    Qtemp = Qtemp(id);
+    Dtemp = Dtemp(id);
+    QD_pdf = Calc_2D_PDF(log10(Qtemp), log10(Dtemp), 15);
+    figure(5); clf
+    figure(5); plot(log10(Qtemp), log10(Dtemp),'+r')
+    figure(5);hold on
+    figure(5);surf(QD_pdf.X, QD_pdf.Y, QD_pdf.V, 'edgecolor','none')
+    figure(5); view(0,90)
+    figure(5); alpha(0.5)
+    figure(5); axis equal
+    drawnow
+    
+    % Depth - screen length
+    Dtemp = [tempW.depth]';
+    SLtemp = [tempW.bot]' - [tempW.top]';
+    id = find(~isnan(Dtemp) & ~isnan(SLtemp));
+    Dtemp = Dtemp(id);
+    SLtemp = SLtemp(id);
+    id = find(Dtemp > 0 & SLtemp > 0);
+    Dtemp = Dtemp(id);
+    SLtemp = SLtemp(id);
+    DS_pdf = Calc_2D_PDF(log10(Dtemp), log10(SLtemp), 15);
+    figure(6); clf
+    figure(6); plot(log10(Dtemp), log10(SLtemp),'+r')
+    figure(6);hold on
+    figure(6);surf(DS_pdf.X, DS_pdf.Y, DS_pdf.V, 'edgecolor','none')
+    figure(6); view(0,90)
+    figure(6); alpha(0.5)
+    figure(6); axis equal
+    drawnow
+    
+
+    
+    Qag_farm = 0;
+    Qpb_farm = 0;
+    if isempty(find(fag<2.6,1,'last'))
+        Ql = xag(1);
+    else
+        Ql = xag(find(fag<2.6,1,'last')+1);
+    end
+    while Qag_farm < abs(Farms_poly(ii,1).AgPump)*corr_ratio
+        % generate a well location
+        while 1 
+            xr = Farms_poly(ii,1).BoundingBox(1,1) + (Farms_poly(ii,1).BoundingBox(2,1) - Farms_poly(ii,1).BoundingBox(1,1))*rand;
+            yr = Farms_poly(ii,1).BoundingBox(1,2) + (Farms_poly(ii,1).BoundingBox(2,2) - Farms_poly(ii,1).BoundingBox(1,2))*rand;
+            in = inpolygon(xr, yr, Farms_poly(ii,1).X, Farms_poly(ii,1).Y);
+            if ~in; continue;end
+            if nanmin(sqrt((WX - xr).^2 + (WY - yr).^2)) < 400; continue;end
+            if  min(Dist_Point_LineSegment(xr, yr, stream_L)) < 400; continue;end
+            
+            r_accept = rand;
+            if r_accept < AG_pdf.F(xr, yr)
+                break;
+            end
+        end
+
+            
+        % Generate pumping Depth screen length
+        rq = Ql + (Qh - Ql)*rand;
+        Qr = interp1(xag, fag, rq);
+        [ Qw, Dw, Sw ] = AssignQDS_v2(QD_pdf, DS_pdf, Qr, nan, nan);
+        Qag_farm = Qag_farm + 10^Qw;
+        WX(cnt,1) = xr; WY(cnt,1) = yr;
+        
+        if do_plot
+            figure(2);plot(xr,yr,'.b')
+            figure(5);plot(Qw,Dw,'.b')
+            figure(6);plot(Dw,Sw,'.b')
+        end
+        figure(4);title([num2str(abs(Farms_poly(ii,1).AgPump) - Qag_farm) ' ' num2str(cnt)]);
+        Wells_Gen(cnt,1).X = xr;
+        Wells_Gen(cnt,1).Y = yr;
+        Wells_Gen(cnt,1).Q = 10^Qw;
+        Wells_Gen(cnt,1).D = 10^Dw;
+        Wells_Gen(cnt,1).SL = 10^Sw;
+        Wells_Gen(cnt,1).type = 0;
+        cnt = cnt + 1;
+        drawnow
+    end
+    
+    if isempty(find(fpb<2.6,1,'last'))
+        Ql = xpb(1);
+    else
+        Ql = xpb(find(fpb<2.6,1,'last')+1);
+    end
+    while Qpb_farm < abs(Farms_poly(ii,1).UrbanPump)*corr_ratio
+        while 1 
+            xr = Farms_poly(ii,1).BoundingBox(1,1) + (Farms_poly(ii,1).BoundingBox(2,1) - Farms_poly(ii,1).BoundingBox(1,1))*rand;
+            yr = Farms_poly(ii,1).BoundingBox(1,2) + (Farms_poly(ii,1).BoundingBox(2,2) - Farms_poly(ii,1).BoundingBox(1,2))*rand;
+            in = inpolygon(xr, yr, Farms_poly(ii,1).X, Farms_poly(ii,1).Y);
+            if ~in; continue;end
+            if nanmin(sqrt((WX - xr).^2 + (WY - yr).^2)) < 400; continue;end
+            if  min(Dist_Point_LineSegment(xr, yr, stream_L)) < 400; continue;end
+            
+            r_accept = rand;
+            if r_accept < PB_pdf.F(xr, yr)
+                break;
+            end
+        end
+
+            
+        % Generate pumping Depth screen length
+        rq = Ql + (Qh - Ql)*rand;
+        Qr = interp1(xpb, fpb, rq);
+        [ Qw, Dw, Sw ] = AssignQDS_v2(QD_pdf, DS_pdf, Qr, nan, nan);
+        Qpb_farm = Qpb_farm + 10^Qw;
+        WX(cnt,1) = xr; WY(cnt,1) = yr;
+        
+        if do_plot
+            figure(3);plot(xr,yr,'.b')
+            figure(5);plot(Qw,Dw,'.b')
+            figure(6);plot(Dw,Sw,'.b')
+        end
+        figure(4);title([num2str(abs(Farms_poly(ii,1).UrbanPump) - Qpb_farm) ' ' num2str(cnt)] );
+        Wells_Gen(cnt,1).X = xr;
+        Wells_Gen(cnt,1).Y = yr;
+        Wells_Gen(cnt,1).Q = 10^Qw;
+        Wells_Gen(cnt,1).D = 10^Dw;
+        Wells_Gen(cnt,1).SL = 10^Sw;
+        Wells_Gen(cnt,1).type = 1;
+        cnt = cnt + 1;
+        drawnow 
+    end
+end
+
+%%
+do_plot = true;
 clear WELLS4CVHM
 for ii = 1:length(Farms_poly)
     if Farms_poly(ii,1).dwr_sbrgns == 0
         continue;
     end
         
-    display(['Farm: ' num2str(Farms_poly(ii,1).dwr_sbrgns)])
+    disp(['Farm: ' num2str(Farms_poly(ii,1).dwr_sbrgns) ' [' num2str(ii) ']'])
     in_wells = inpolygon([CVHMwells.X]',[CVHMwells.Y]', ...
                          Farms_poly(ii,1).X, Farms_poly(ii,1).Y) & ... 
                inpolygon([CVHMwells.X]',[CVHMwells.Y]', ...
@@ -223,13 +440,42 @@ for ii = 1:length(Farms_poly)
                      
     tempW = CVHMwells(in_wells,1);
     
+    negQ = find([tempW.Q]' <= 0);
+    for jj = 1:length(negQ)
+        tempW(negQ(jj),1).Q = nan;
+    end
+    negD = find([tempW.depth]' <= 0);
+    for jj = 1:length(negD)
+        tempW(negD(jj),1).depth = nan;
+    end
+    negSL = find([tempW.bot]' - [tempW.top]' <= 0);
+    for jj = 1:length(negSL)
+        tempW(negSL(jj),1).top = nan;
+        tempW(negSL(jj),1).bot = nan;
+    end
+    
+    
+    
     
     QD_PDF = Calc_2D_PDF(log10([tempW.Q]'), log10([tempW.depth]'));
-    %surf(QD_PDF.GridVectors{1,1},QD_PDF.GridVectors{1,2},QD_PDF.Values,'edgecolor','none')
-    % plot(log10([tempW.Q]'), log10([tempW.depth]'),'.')
     DS_PDF = Calc_2D_PDF(log10([tempW.depth]'), log10([tempW.bot]' - [tempW.top]'));
-    % surf(DS_PDF.GridVectors{1,1},DS_PDF.GridVectors{1,2},DS_PDF.Values,'edgecolor','none')
-    % plot(log10([tempW.depth]'), log10([tempW.bot]' - [tempW.top]'),'.')
+    if do_plot
+        figure(1); clf
+        figure(1); hold on
+        figure(1);surf(QD_PDF.X,QD_PDF.Y,QD_PDF.V,'edgecolor','none')
+        figure(1);plot(log10([tempW.Q]'), log10([tempW.depth]'),'.')
+        figure(1); view(0,90)
+        figure(1); alpha(0.5)
+        drawnow;
+        
+        figure(2); clf
+        figure(2); hold on
+        figure(2);surf(DS_PDF.X,DS_PDF.Y,DS_PDF.V,'edgecolor','none')
+        figure(2);plot(log10([tempW.depth]'), log10([tempW.bot]' - [tempW.top]'),'.')
+        figure(2); view(0,90)
+        figure(2); alpha(0.5)
+        drawnow;
+    end
     
     tempW_mod = tempW;
     for jj = 1:length(tempW)
@@ -242,7 +488,14 @@ for ii = 1:length(Farms_poly)
          tempW_mod(jj,1).depth = 10^Dr;
          tempW_mod(jj,1).SL = 10^Sr;
     end
-    continue;
+    
+    if do_plot
+        figure(1);plot(log10([tempW_mod.Q]'), log10([tempW_mod.depth]'),'.r')
+        figure(2);plot(log10([tempW_mod.depth]'), log10([tempW_mod.SL]'),'.r')
+        drawnow
+    end
+        
+    
     
      
 %     ipub = find([tempW.type]'==1);
@@ -376,7 +629,10 @@ for ii = 1:length(Farms_poly)
 %                                              tempWpb_mod(jj,1).bot - tempWpb_mod(jj,1).top);
 %     end
     
-    
+    ipub = find([tempW_mod.type]'==1);
+    iag = find([tempW_mod.type]'==0);
+    tempWpb_mod = tempW_mod(ipub,1);
+    tempWag_mod = tempW_mod(iag,1);
     
     
     WELLS4CVHM(ii,1).farm_id = Farms_poly(ii,1).dwr_sbrgns;

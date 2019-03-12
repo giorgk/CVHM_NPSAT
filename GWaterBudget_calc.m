@@ -43,6 +43,21 @@ for i=1:510
     WELLS.ym(i,:) = [y m];
     m=m+1;
 end
+%%
+totDays = 0;
+for ii = 1:510
+    ndays = eomday(RCH.ym(ii,1), RCH.ym(ii,2));
+    totDays = totDays + ndays;
+    R(ii,1) = sum(sum(RCH.data{ii,1}.*ndays));
+    S(ii,1) = sum(STRLK.data(:,ii).*ndays);
+    W(ii,1) = sum(WELLS.data{ii,1}(:,4).*ndays) + sum(WELLS.data{ii,2}(:,4).*ndays);
+    Diff(ii,1) = R(ii,1) + S(ii,1) + W(ii,1);
+end
+%%
+plot(cumsum(R),'r')
+hold on
+plot(cumsum(S),'g')
+plot(cumsum(W),'b')
 %
 % From file https://water.usgs.gov/ogw/modflow/mf6io.pdf pg21:
 % The cell-by-cell storage term gives the net flow to or from storage in a variable-head cell. The net storage
@@ -254,16 +269,34 @@ StrmAvNeg_77_99 = sum([bud.QstrmNeg_77_99]'./TotDays1)/10^6;
 StrmAvPos_91_03 = sum([bud.QstrmPos_91_03]'./TotDays2)/10^6;
 StrmAvNeg_91_03 = sum([bud.QstrmNeg_91_03]'./TotDays2)/10^6;
 
-
+%% Average Wells
+totdays = 0;
+AVwells = zeros(size(RCH.data{1,1},1), size(RCH.data{1,1},2));
+for ii = istart2:iend2
+    days = eomday(WELLS.ym(ii,1), WELLS.ym(ii,2));
+    totdays = totdays + days;
+    for jj = 1:size(WELLS.data{ii,1},1)
+        AVwells(WELLS.data{ii,1}(jj,2), WELLS.data{ii,1}(jj,3)) = ...
+            AVwells(WELLS.data{ii,1}(jj,2), WELLS.data{ii,1}(jj,3)) + ...
+            WELLS.data{ii,1}(jj,4)*days;
+    end
+    for jj = 1:size(WELLS.data{ii,2},1)
+        AVwells(WELLS.data{ii,2}(jj,2), WELLS.data{ii,2}(jj,3)) = ...
+            AVwells(WELLS.data{ii,2}(jj,2), WELLS.data{ii,2}(jj,3)) + ... 
+            WELLS.data{ii,2}(jj,4)*days;
+    end
+end
+AVwells = AVwells/totdays;
+fprintf('%f\n',sum(sum(AVwells)))
 %% Average Streams
-AVstrm = STRLK.data(:,istart2:iend2); %m^3/day
+AVstrm = zeros(size(STRLK.data,1),1); %m^3/day
 ym = STRLK.ym(istart2:iend2,:);
 totdays = 0;
-for ii = 1:size(AVstrm,2)
-    totdays = totdays + eomday(ym(ii,1), ym(ii,2));
-    AVstrm(:,ii) = AVstrm(:,ii)*eomday(ym(ii,1), ym(ii,2)); %m^3/month
+for ii = istart2:iend2
+    totdays = totdays + eomday(STRLK.ym(ii,1), STRLK.ym(ii,2));
+    AVstrm = AVstrm + STRLK.data(:,ii)*eomday(STRLK.ym(ii,1), STRLK.ym(ii,2)); %m^3/month
 end
-AVstrm = sum(AVstrm,2)/totdays; %m^3/day Average over the period of interest
+AVstrm = AVstrm/totdays; %m^3/day Average over the period of interest
 STRMS = [STRLK.rc AVstrm];
 fprintf('%f\n',sum(STRMS(:,4)))
 %%
@@ -287,6 +320,8 @@ save('AvStresses','AVrch','-append')
 % process the bas variable
 % Loop through the modflow grid cells and find the center coordinate of the
 % cell in the real system
+load('gis_data/BAS_active_shp.mat');
+bas = bas_active;
 R = [bas.ROW]';
 C = [bas.COLUMN_]';
 xy_rch = [];

@@ -6,6 +6,7 @@ if ~isnan(Q_in) && ~isnan(D_in) && ~isnan(S_in)
     return;
 end
 
+cnt = 0;
 while 1
     if isnan(Q_in)
         Qr = min(F_QD.X) + (max(F_QD.X) - min(F_QD.X))*rand;
@@ -14,7 +15,7 @@ while 1
     end
 
     if isnan(D_in)
-        Dr = min(F_QD.Y) + (max(F_QD.Y) - min(F_QD.Y))*rand;
+        Dr = max([min(F_QD.Y) min(F_DS.X)])  + (min([max(F_QD.Y) max(F_DS.X)])- max([min(F_QD.Y) min(F_DS.X)]))*rand;
     else
         Dr = D_in;
     end
@@ -39,5 +40,12 @@ while 1
         D_out = Dr;
         S_out = Sr;
         break;
+    end
+    cnt = cnt + 1;
+    if cnt > 1000
+        Q_in = nan;
+        D_in = nan;
+        S_in = nan;
+        cnt = 0;
     end
 end
