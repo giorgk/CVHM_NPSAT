@@ -1,5 +1,5 @@
 %% WELL GENERATION ALGORITHM V2 
-%{
+%
 % In this version we are going to take into account the pumping 
 % distribution of CVHM and combined information from the well dataset and
 % CVHM model
@@ -196,8 +196,9 @@ Farm_basin = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS
 Farms_poly = shaperead('gis_data/FARMS_polyPump.shp');
 CVHMwells = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/WellData/CVwells_30y_proj.shp');
 cvhmDomain = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/BAS_active_outline.shp');
-%}
+%
 %%
+%
 clear
 clc
 do_plot = false;
@@ -205,6 +206,7 @@ load('gis_data/WellGenerationSHP','Farm_basin','cvhmDomain','CVHMwells');
 Farm_basin = Farm_basin';
 CVHMwells = CVHMwells';
 load('gis_data/FARMS_polyPump_91_03.mat')
+load('gis_data/CVHM_Mesh_outline_modif_shp.mat')
 
 % RCH : 25715545.162923 m^3/day
 % STRM: 899912.211251 m^3/day
@@ -227,7 +229,7 @@ end
 %
 % Generate random pumping
 Ql = 0.15;
-Qh = 0.90;
+Qh = 0.925;
 WX = nan(20000,1); WY = nan(20000,1); cnt = 1;
 clear Wells_Gen;
 for ii = 1:length(Farms_poly)
@@ -334,10 +336,20 @@ for ii = 1:length(Farms_poly)
     
     Qag_farm = 0;
     Qpb_farm = 0;
-    if isempty(find(fag<2.6,1,'last'))
+    
+    % The data in Rich's well data set are in gpm while the units of CVHM are
+    % in m^3/day. To convert the pumping to m^/day Q = Q*5.451.
+    % However this correpond to the design pumping. The argument is that
+    % each year only six months operate with this rate therefor we divide
+    % the pumping by 6 months Q = Q*5.451/6. 
+    % As we dont want rates lower than 400 m^3/day this would be
+    % log10(400*(6/5.451)) = 2.6437 gpm.
+    % 10^2.6437*5.451/6
+    
+    if isempty(find(fag < 2.6437, 1, 'last'))
         Ql = xag(1);
     else
-        Ql = xag(find(fag<2.6,1,'last')+1);
+        Ql = xag(find(fag < 2.6437, 1, 'last')+1);
     end
     while Qag_farm < abs(Farms_poly(ii,1).AgPump)*corr_ratio
         % generate a well location
@@ -345,6 +357,8 @@ for ii = 1:length(Farms_poly)
             xr = Farms_poly(ii,1).BoundingBox(1,1) + (Farms_poly(ii,1).BoundingBox(2,1) - Farms_poly(ii,1).BoundingBox(1,1))*rand;
             yr = Farms_poly(ii,1).BoundingBox(1,2) + (Farms_poly(ii,1).BoundingBox(2,2) - Farms_poly(ii,1).BoundingBox(1,2))*rand;
             in = inpolygon(xr, yr, Farms_poly(ii,1).X, Farms_poly(ii,1).Y);
+            if ~in; continue;end
+            in = inpolygon(xr, yr, CVHM_Mesh_outline_modif.X, CVHM_Mesh_outline_modif.Y);
             if ~in; continue;end
             if nanmin(sqrt((WX - xr).^2 + (WY - yr).^2)) < 400; continue;end
             if  min(Dist_Point_LineSegment(xr, yr, stream_L)) < 400; continue;end
@@ -354,13 +368,21 @@ for ii = 1:length(Farms_poly)
                 break;
             end
         end
+        
+        
 
             
         % Generate pumping Depth screen length
         rq = Ql + (Qh - Ql)*rand;
         Qr = interp1(xag, fag, rq);
+        if abs(Farms_poly(ii,1).AgPump)*corr_ratio - (Qag_farm + 10^Qr*5.451/6) < 400
+            Qr = log10((abs(Farms_poly(ii,1).AgPump)*corr_ratio - Qag_farm)*6/5.451);
+        end
+        
         [ Qw, Dw, Sw ] = AssignQDS_v2(QD_pdf, DS_pdf, Qr, nan, nan);
-        Qag_farm = Qag_farm + 10^Qw;
+        Qag_farm = Qag_farm + 10^Qw*5.451/6; % m^3/day for six months
+        
+        
         WX(cnt,1) = xr; WY(cnt,1) = yr;
         
         if do_plot
@@ -368,10 +390,10 @@ for ii = 1:length(Farms_poly)
             figure(5);plot(Qw,Dw,'.b')
             figure(6);plot(Dw,Sw,'.b')
         end
-        figure(4);title([num2str(abs(Farms_poly(ii,1).AgPump) - Qag_farm) ' ' num2str(cnt)]);
+        figure(4);title([num2str(abs(Farms_poly(ii,1).AgPump)*corr_ratio - Qag_farm) ' ' num2str(cnt)]);
         Wells_Gen(cnt,1).X = xr;
         Wells_Gen(cnt,1).Y = yr;
-        Wells_Gen(cnt,1).Q = 10^Qw;
+        Wells_Gen(cnt,1).Q = 10^Qw*5.451/6;
         Wells_Gen(cnt,1).D = 10^Dw;
         Wells_Gen(cnt,1).SL = 10^Sw;
         Wells_Gen(cnt,1).type = 0;
@@ -379,16 +401,18 @@ for ii = 1:length(Farms_poly)
         drawnow
     end
     
-    if isempty(find(fpb<2.6,1,'last'))
+    if isempty(find(fpb < 2.6437, 1, 'last'))
         Ql = xpb(1);
     else
-        Ql = xpb(find(fpb<2.6,1,'last')+1);
+        Ql = xpb(find(fpb < 2.6437, 1, 'last')+1);
     end
     while Qpb_farm < abs(Farms_poly(ii,1).UrbanPump)*corr_ratio
         while 1 
             xr = Farms_poly(ii,1).BoundingBox(1,1) + (Farms_poly(ii,1).BoundingBox(2,1) - Farms_poly(ii,1).BoundingBox(1,1))*rand;
             yr = Farms_poly(ii,1).BoundingBox(1,2) + (Farms_poly(ii,1).BoundingBox(2,2) - Farms_poly(ii,1).BoundingBox(1,2))*rand;
             in = inpolygon(xr, yr, Farms_poly(ii,1).X, Farms_poly(ii,1).Y);
+            if ~in; continue;end
+            in = inpolygon(xr, yr, CVHM_Mesh_outline_modif.X, CVHM_Mesh_outline_modif.Y);
             if ~in; continue;end
             if nanmin(sqrt((WX - xr).^2 + (WY - yr).^2)) < 400; continue;end
             if  min(Dist_Point_LineSegment(xr, yr, stream_L)) < 400; continue;end
@@ -403,8 +427,12 @@ for ii = 1:length(Farms_poly)
         % Generate pumping Depth screen length
         rq = Ql + (Qh - Ql)*rand;
         Qr = interp1(xpb, fpb, rq);
+        if abs(Farms_poly(ii,1).UrbanPump)*corr_ratio - Qpb_farm - 10^Qr*5.451/6 < 400
+            Qr = log10((abs(Farms_poly(ii,1).UrbanPump)*corr_ratio - Qpb_farm)*6/5.451);
+        end
+        
         [ Qw, Dw, Sw ] = AssignQDS_v2(QD_pdf, DS_pdf, Qr, nan, nan);
-        Qpb_farm = Qpb_farm + 10^Qw;
+        Qpb_farm = Qpb_farm + 10^Qw*5.451/6;
         WX(cnt,1) = xr; WY(cnt,1) = yr;
         
         if do_plot
@@ -412,10 +440,10 @@ for ii = 1:length(Farms_poly)
             figure(5);plot(Qw,Dw,'.b')
             figure(6);plot(Dw,Sw,'.b')
         end
-        figure(4);title([num2str(abs(Farms_poly(ii,1).UrbanPump) - Qpb_farm) ' ' num2str(cnt)] );
+        figure(4);title([num2str(abs(Farms_poly(ii,1).UrbanPump)*corr_ratio - Qpb_farm) ' ' num2str(cnt)] );
         Wells_Gen(cnt,1).X = xr;
         Wells_Gen(cnt,1).Y = yr;
-        Wells_Gen(cnt,1).Q = 10^Qw;
+        Wells_Gen(cnt,1).Q = 10^Qw*5.451/6;
         Wells_Gen(cnt,1).D = 10^Dw;
         Wells_Gen(cnt,1).SL = 10^Sw;
         Wells_Gen(cnt,1).type = 1;
@@ -423,8 +451,9 @@ for ii = 1:length(Farms_poly)
         drawnow 
     end
 end
-
-%%
+%
+%
+%% 
 do_plot = true;
 clear WELLS4CVHM
 for ii = 1:length(Farms_poly)
@@ -847,12 +876,17 @@ end
 id = find(WW(:,3) <= WW(:,4));
 WW(id,3) = WW(id,4) + 30;
 %% Assign top and bottom according to the artificial elevation and CVHM bottom
-topelev = read_Scattered('CVHM_top_elev.npsat',2);
-Ftop = scatteredInterpolant(topelev.p(:,1),topelev.p(:,2),topelev.v);
+topelev = read_Scattered('CVHM_top_elev_per2.npsat',2);
+Ftop = scatteredInterpolant(topelev.p(:,1), topelev.p(:,2), topelev.v, 'natural');
 
 % abd the bottom of the aquifer
 botelev = read_Scattered('CVHM_Bot_elev.npsat',2);
-Fbot = scatteredInterpolant(botelev.p(:,1),botelev.p(:,2),botelev.v);
+Fbot = scatteredInterpolant(botelev.p(:,1), botelev.p(:,2), botelev.v, 'natural');
+%
+%%
+load('Random_wells.mat', 'Wells_Gen')
+WW = [[Wells_Gen.X]' [Wells_Gen.Y]' [Wells_Gen.D]' [Wells_Gen.SL]' [Wells_Gen.Q]'];
+
 %}
 %%
 cnvrs = 0.3048;
@@ -860,25 +894,48 @@ for ii = 1:size(WW,1)
     Wt = Ftop(WW(ii,1), WW(ii,2));
     Bs = Fbot(WW(ii,1), WW(ii,2));
     aquif_height = Wt - Bs;
-    if aquif_height < WW(ii,3)*cnvrs
-        if aquif_height > 30
-            botw = Bs + 10;
+    depth = WW(ii,3)*cnvrs;
+    screen = WW(ii,4)*cnvrs;
+    if aquif_height < depth + screen
+        if depth > screen
+            botw = Bs + 30;
+            topw = botw + screen;
+            if topw > Wt
+                topw = Wt-30;
+            end
         else
-            wtf = true;
+            topw = Wt - depth;
+            botw = Bs + 30;
+            if topw < botw
+                topw = Wt-30;
+            end
         end
     else
-        botw = Wt - WW(ii,3)*cnvrs;
+        topw = Wt - depth;
+        botw = topw - screen;
     end
     
-    if botw + WW(ii,4)*cnvrs > Wt
-        if aquif_height > 30
-            topw = Wt - 10;
-        else
-            wtf = true;
-        end
-    else
-        topw = botw+WW(ii,4)*cnvrs;
-    end
+    
+%     if aquif_height < WW(ii,3)*cnvrs
+%         if aquif_height > 30
+%             botw = Bs + 10;
+%         else
+%             wtf = true;
+%         end
+%     else
+%         botw = Wt - WW(ii,3)*cnvrs;
+%     end
+%     
+%     if botw + WW(ii,4)*cnvrs > Wt
+%         if aquif_height > 30
+%             topw = Wt - 10;
+%         else
+%             wtf = true;
+%         end
+%     else
+%         topw = botw+WW(ii,4)*cnvrs;
+%     end
+    
     WW(ii,8) = topw;
     WW(ii,9) = botw;
     WW(ii,10) = Wt;
@@ -886,10 +943,12 @@ for ii = 1:size(WW,1)
 end
 
 %% Correct the wells with 
-id = find(WW(:,9) < WW(:,11))
+id1 = find(WW(:,9) < WW(:,11))
+id2 = find(WW(:,8) < WW(:,9))
+id3 = find(WW(:,10) < WW(:,8))
 %% Print to file
 
-fid = fopen('CVHM_wells.npsat','w');
+fid = fopen('CVHM_wells_per2.npsat','w');
 fprintf(fid, '%d\n', size(WW, 1));
 fprintf(fid, '%f %f %f %f -%f\n', [WW(:,1) WW(:,2) WW(:,8) WW(:,9) WW(:,5)]');
 fclose(fid);

@@ -13,15 +13,21 @@ while 1
     else
         Qr = Q_in;
     end
-
+    
+    % minimum depth is set to 50 ft
     if isnan(D_in)
-        Dr = max([min(F_QD.Y) min(F_DS.X)])  + (min([max(F_QD.Y) max(F_DS.X)])- max([min(F_QD.Y) min(F_DS.X)]))*rand;
+        dmin = max([min(F_QD.Y) min(F_DS.X) 1.699]);
+        dmax = min([max(F_QD.Y) max(F_DS.X)]);
+        Dr = dmin  + (dmax - dmin)*rand;
     else
         Dr = D_in;
     end
-
+    
+    % minimum screen length 50 ft
     if isnan(S_in)
-        Sr = min(F_DS.Y) + (max(F_DS.Y) - min(F_DS.Y))*rand;
+        slmin = max([min(F_DS.Y) 1.699]);
+        slmax = min([max(F_DS.Y) 3.1]);
+        Sr = slmin + (slmax - slmin)*rand;
     else
         Sr = S_in;
     end

@@ -11,11 +11,15 @@ PNTS = [];
 for ii = 1:length(Xs{1,1})
     PNTS = [PNTS; Xs{1,1}(ii) Ys{1,1}(ii)];
 end
+
+%% or load this
+load('HeadAnalysisData.mat')
 %% loop through the edges of the bas and set the ij ids for those that 
 % match the outline segments
 LNS_IJ = nan(size(PNTS,1),2);
 for ii = 1:size(mesh,1)
-    [Xs, Ys] = polysplit(mesh(ii,1).X, mesh(ii,1).Y);
+    %[Xs, Ys] = polysplit(mesh(ii,1).X, mesh(ii,1).Y);
+    Xs{1,1} = mesh(ii,1).X; Ys{1,1} = mesh(ii,1).Y;
     for jj = 1:size(Xs,1)
         for k = 1:length(Xs{jj,1})-1
             pa = [Xs{jj,1}(k) Ys{jj,1}(k)];
@@ -44,17 +48,21 @@ end
 % For the analysis load the file HEADS.mat
 % This is not included in the repository because the size is about 224 MB
 %
-load('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/ClaudiaRun/HEADS.mat')
-clear TOPHEAD
+%load('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/ClaudiaRun/HEADS.mat')
+load('/media/giorgk/DATA/giorgk/Documents/CVHM_DATA/ClaudiaRun/HEADS.mat')
+clear TOPHEAD toplay
 % For each time step compute the top most head value
 for it = 1:size(HEADS,1)
     it
     TOPHEAD{it,1} = nan(size(HEADS{1,1},1), size(HEADS{1,1},2));
+    toplay{it,1} = nan(size(HEADS{1,1},1), size(HEADS{1,1},2));
     for ii = 1:size(HEADS{1,1},1)
         for jj = 1:size(HEADS{1,1},2)
             for kk = 1:size(HEADS{1,1},3)%:-1:1
                 if HEADS{it,1}(ii,jj,kk) ~= HEADS{1,1}(1,1,1)
                     TOPHEAD{it,1}(ii,jj) = HEADS{it,1}(ii,jj,kk);
+                    toplay{it,1}(ii, jj) = kk;
+                    break
                 end
             end
         end
@@ -62,10 +70,10 @@ for it = 1:size(HEADS,1)
 end
 %
 %% Calculate Standard deviation
-% get the istart, iend variables from the GWaterBudget_calc script
+% get the istart2, iend2 variables from the GWaterBudget_calc script
 head_std = nan(size(HEADS{1,1},1), size(HEADS{1,1},2));
 head_Av = nan(size(HEADS{1,1},1), size(HEADS{1,1},2));
-timespan = istart:1:iend;
+timespan = istart2:1:iend2;
 for ii = 1:size(HEADS{1,1},1)
     for jj = 1:size(HEADS{1,1},2)
         temp = nan(length(timespan),1);
@@ -83,7 +91,7 @@ surf(temp,'edgecolor','none')
 view(360,-90)
 %
 %% Assign head values to segments
-timespan = istart:1:iend;
+timespan = istart2:1:iend2;
 LNS_IJ = [LNS_IJ nan(size(LNS_IJ,1),2)];
 for ii = 1:size(LNS_IJ, 1) - 1
     r = LNS_IJ(ii,1);
@@ -181,8 +189,8 @@ fclose(fid);
 % process the bas variable
 % Loop through the modflow grid cells and find the center coordinate of the
 % cell in the real system
-R = [bas.ROW]';
-C = [bas.COLUMN_]';
+R = [bas_active.ROW]';
+C = [bas_active.COLUMN_]';
 xy_top = [];
 for ii = 1:size(head_Av, 1)
     for jj = 1:size(head_Av, 2)
@@ -190,8 +198,8 @@ for ii = 1:size(head_Av, 1)
         if isempty(id)
             continue;
         elseif length(id) == 1
-            xc = mean(bas(id,1).X(1:end-1));
-            yc = mean(bas(id,1).Y(1:end-1));
+            xc = mean(bas_active(id,1).X(1:end-1));
+            yc = mean(bas_active(id,1).Y(1:end-1));
             xy_top = [xy_top; xc yc head_Av(ii,jj)];
         else
             error('Thats so wrong');
@@ -208,6 +216,6 @@ Ftop.Method = 'nearest';
 Ftop.ExtrapolationMethod = 'nearest';
 buf_val = Ftop(buff_pnt(:,1), buff_pnt(:,2));
 xy_top = [xy_top; buff_pnt buf_val];
-%% write the rch file
-writeScatteredData('CVHM_top_elev.npsat', struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), xy_top);
+%% write the top elevation file
+writeScatteredData('CVHM_top_elev_per2.npsat', struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), xy_top);
 %}

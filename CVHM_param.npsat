@@ -47,7 +47,7 @@ subsection B. Geometry  ========================================
     # a----------------------------------
     # Top elevation function must be either a single value
     # or the name of a file
-    set a Top elevation function    = CVHM_top_elev4.npsat
+    set a Top elevation function    = CVHM_top_elev_per2.npsat
 
     # b----------------------------------
     # Bottom elevation function must be either a single value
@@ -85,11 +85,11 @@ subsection C. Discretization ===================================
 
   # d----------------------------------
   # The number of initial refinements around the wells
-  set d Well Refinement         = 7
+  set d Well Refinement         = 1
 
   # e----------------------------------
   # The number of initial refinements around the Streams
-  set e Stream Refinement       = 7
+  set e Stream Refinement       = 1
 end
 
 
@@ -130,17 +130,17 @@ subsection F. Sources & Sinks ==================================
   # a----------------------------------
   # Groundwater recharche function
   # must be either a single value or the name of a file
-  set a Groundwater recharge = CVHM_RCH.npsat
+  set a Groundwater recharge = CVHM_RCH_per2.npsat
 
   # b----------------------------------
   # Stream network
   # The name of a file that defines the streams and the rates
-  set b Stream recharge      = CVHM_streams.npsat
+  set b Stream recharge      = CVHM_streams_per2.npsat
 
   # c----------------------------------
   # Well network
   # The name of a file with the well information
-  set c Wells                = CVHM_wells3.npsat
+  set c Wells                = CVHM_wells_per2.npsat
 end
 
 
@@ -190,7 +190,7 @@ end
 subsection I. Particle tracking ================================
   # a----------------------------------
   # Set to 0 to deactivate particle tracking. Default is 1
-  set a Enable particle tracking = 1
+  set a Enable particle tracking = 0
 
 
   subsection A. Configuration =---=---=---=---=---=---=---=---=
@@ -316,7 +316,7 @@ subsection J. Output Parameters ================================
     # b----------------------------------
     # Prints the coordinates of the free surface vertices.
     # The file name is Prefix + top + iter + proc.xyz
-    set b Print free surface point cloud = 0
+    set b Print free surface point cloud = 1
 
     # c----------------------------------
     # This should be roughly equal to the maximum dimension
