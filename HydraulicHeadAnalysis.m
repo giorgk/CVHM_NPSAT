@@ -145,7 +145,7 @@ for ii = 1:size(PNTS,1)-1
     end
 end
 %% Define the number of boundary functions based on the head standard deviation
-std_Htol = 50;
+std_Htol = 2.5;
 cnt_bnd = 0;
 clear BND_LINES
 next_line = 1;

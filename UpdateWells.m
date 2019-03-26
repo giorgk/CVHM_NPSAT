@@ -1,39 +1,37 @@
 %% 
 % This scripts updates the well tops and bottom based on a different initial 
 % estimation. Usually you have run the model once and have obtained a water
-% table surface. The water table surface is printed a point cloud file
+% table surface. The water table surface is printed as a point cloud file
 % which we will use it to update the initial elevation and the well screens
-% so that the are under the water table
+% so that the are below the water table
 %
-%% make init_surf from parallel run
-nproc = 64;
+pref = 'CVHM_bc10_top_';
+iter = 4;
+%%% read point cloud water table
+nproc = 128;
 Elev_new = [];
 for ii = 0:nproc-1
-    fid = fopen(['output/Ref7/cvhm_top_000_' num2str(ii,'%04d') '.xyz'],'r');
+    fid = fopen(['output/' pref num2str(iter,'%03d') '_' num2str(ii,'%04d') '.xyz'],'r');
     Np = fscanf(fid, '%d',1);
     temp = fscanf(fid, '%f',Np*4);
     fclose(fid);
     temp = reshape(temp, 4, Np)';
     Elev_new = [Elev_new;temp];
 end
-%% Write the assembled new elevation into one file
-% This will have duplicalted points. Therefore create a scatter interpolant
-% using the code snippet bellow to take care of this
-fid = fopen('output/init_surf_ref7.xyz','w');
-fprintf(fid, '%d\n', length(FnewElev.Values));
-fprintf(fid, '%f %f %f\n', [FnewElev.Points FnewElev.Values]');
+%%% Remove duplicates
+FnewElev = scatteredInterpolant(Elev_new(:,1), Elev_new(:,2), Elev_new(:,4));
+Elev_new_mod = [FnewElev.Points FnewElev.Values];
+%%% Write the assembled new elevation into one file
+fid = fopen(['output/' pref num2str(iter,'%03d') '.xyz'],'w');
+fprintf(fid, '%d\n', length(Elev_new_mod));
+fprintf(fid, '%f %f %f\n', Elev_new_mod');
 fclose(fid);
-
-%% Read new water table as point cloud
-fid = fopen('output/init_surf_0.xyz','r');
-Np = fscanf(fid, '%d',1);
-temp = fscanf(fid, '%f',Np*4);
-fclose(fid);
-Elev_new = reshape(temp, 4, Np)';
 %% Read initial water table
-topelev = read_Scattered('CVHM_top_elev.npsat',2);
+topelev = read_Scattered('CVHM_top_elev_per2.npsat',2);
+
+
 %% plot the points
-plot3(Elev_new(:,1), Elev_new(:,2), Elev_new(:,4),'.r')
+plot3(Elev_new_mod(:,1), Elev_new_mod(:,2), Elev_new_mod(:,3),'.r')
 hold on
 %plot3(Elev_new(:,1), Elev_new(:,2), Elev_new(:,3),'.k')
 plot3(topelev.p(:,1), topelev.p(:,2), topelev.v(:,1),'.b')
@@ -48,25 +46,25 @@ hold on
 %plot3(Elev_new(:,1), Elev_new(:,2), Elev_new(:,3),'.k')
 plot3(topelev.p(:,1), topelev.p(:,2), topelev.v(:,1),'.b')
 %% Generate an interpolation function out of the new modified elevation
-FnewElev = scatteredInterpolant(Elev_new_mod(:,1), Elev_new_mod(:,2), Elev_new_mod(:,4));
+FnewElev = scatteredInterpolant(Elev_new_mod(:,1), Elev_new_mod(:,2), Elev_new_mod(:,3));
 FnewElev.Method = 'nearest';
 FnewElev.ExtrapolationMethod = 'nearest';
 %% Print a new top for the model
 newp = FnewElev(topelev.p(:,1), topelev.p(:,2));
-writeScatteredData('CVHM_top_elev5.npsat', ...
+writeScatteredData('CVHM_top_elev_per2_1.npsat', ...
                    struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), ...
                    [topelev.p(:,1) topelev.p(:,2) newp]);
-%}
+%
 %% Update the wells using the new water table
 %% read data
 % wells
 %
-wells = readWells('CVHM_wells.npsat');
+wells = readWells('CVHM_wells_per2_0.npsat');
 % top 
-topelev = read_Scattered('CVHM_top_elev3.npsat',2);
+topelev = read_Scattered('CVHM_top_elev_per2_1.npsat',2);
 Ftop = scatteredInterpolant(topelev.p(:,1), topelev.p(:,2), topelev.v(:,1));
 % Old top this will help identifying the depth 
-Oldtopelev = read_Scattered('CVHM_top_elev.npsat',2);
+Oldtopelev = read_Scattered('CVHM_top_elev_per2_0.npsat',2);
 Ftop_old = scatteredInterpolant(Oldtopelev.p(:,1), Oldtopelev.p(:,2), Oldtopelev.v(:,1));
 % Bottom
 botelev = read_Scattered('CVHM_Bot_elev.npsat',2);
@@ -134,7 +132,7 @@ for ii = 1:size(wells,1)
     %end
 end
 %% Print the updated wells
-fid = fopen('CVHM_wells3.npsat','w');
+fid = fopen('CVHM_wells_per2_1.npsat','w');
 fprintf(fid, '%d\n', size(wells, 1));
 fprintf(fid, '%f %f %f %f %f\n', wells');
 fclose(fid);
