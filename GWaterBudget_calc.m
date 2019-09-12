@@ -2,6 +2,7 @@
 % Claudia's Caped Run
 %
 %% PATHS
+% D218 path = /home/UCDAVIS/CVHM_NPSAT/ClaudiaRun
 %% Home Linux
 cbcf_path = '/home/giorgk/Documents/UCDAVIS/CVHM_DATA/ClaudiaRun/';
 %% UCDAVIS Linux
@@ -64,19 +65,112 @@ plot(cumsum(W),'b')
 % for each cell in the grid is saved in transient simulations if the appropriate flags are set. Withdrawal from storage
 % in the cell is considered positive, whereas accumulation in storage is considered negative.
 %% CVHM default run
+% ds218 : /home/UCDAVIS/CVHM_NPSAT
 load('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/CBC.mat');
+%% load the cell shapefile
+% and write the averaged info
+bas = shaperead(['gis_data' filesep 'BAS_active.shp']);
+bas_rc = [[bas.ROW]' [bas.COLUMN_]'];
+bud = rmfield(bas, {'lay1_act','lay2_act','lay3_act','lay45_act','lay6_act','lay7_act','lay8_act','lay9_act','lay10_act',...
+        'strt_hd_01','strt_hd_02','strt_hd_03','strt_hd_04','strt_hd_05','strt_hd_06','strt_hd_07','strt_hd_08','strt_hd_09','strt_hd_10'});
+%% add Subbasins and farm id
+farms = shaperead(['gis_data' filesep 'FARMS_poly.shp']);
+XYmean = zeros(length(bud),2);
+for ii = 1:length(bud)
+   XYmean(ii,:) = [mean(bud(ii,1).X(1:4)) mean(bud(ii,1).Y(1:4))]; 
+end
+for ii = 1:length(farms)
+   id_in = find(inpolygon(XYmean(:,1), XYmean(:,2), farms(ii,1).X, farms(ii,1).Y));
+   for jj = 1:length(id_in)
+       bud(id_in(jj),1).farm_id = farms(ii,1).dwr_sbrgns;
+       bud(id_in(jj),1).bas_id = farms(ii,1).Basins;
+   end
+end
 %%
 m=4;y=1961;
+basin_ids = unique([bud.bas_id]')';
+farm_ids = unique([bud.farm_id]')';
 for ii=1:510
     if m==13
         m=1;y=y+1;
     end
-    monthlySUM(ii,1)=y;
-    monthlySUM(ii,2)=m;
-    monthlySUM(ii,3)=sum(sum(sum(CBC{ii,1}{1,2}))) + sum(sum(sum(CBC{ii,1}{7,2})));
+    dailySUM(ii,1)=y;
+    dailySUM(ii,2)=m;
+    
+    % All CV
+    dailySUM(ii,3)=sum(sum(sum(CBC{ii,1}{1,2}))) + sum(sum(sum(CBC{ii,1}{7,2})));
+    
+    % group by Basin
+    for jj = basin_ids
+        cell_id = find([bud.bas_id] == jj);
+        r = [bud(cell_id,1).ROW]';
+        c = [bud(cell_id,1).COLUMN_]';
+        tmp_strg = 0;
+        for k = 1:10
+            tmp = CBC{ii,1}{1,2}(:,:,k) + CBC{ii,1}{7,2}(:,:,k);
+            tmp_strg = tmp_strg + sum(tmp(sub2ind(size(tmp),r,c)));
+        end
+        dailySUM(ii,4+jj) = tmp_strg;
+    end
+    
+    % group by farm
+    for jj = farm_ids
+        cell_id = find([bud.farm_id] == jj);
+        r = [bud(cell_id,1).ROW]';
+        c = [bud(cell_id,1).COLUMN_]';
+        tmp_strg = 0;
+        for k = 1:10
+            tmp = CBC{ii,1}{1,2}(:,:,k) + CBC{ii,1}{7,2}(:,:,k);
+            tmp_strg = tmp_strg + sum(tmp(sub2ind(size(tmp),r,c)));
+        end
+        dailySUM(ii,6+jj) = tmp_strg;
+    end
     m=m+1;
 end
 %%
+% Test the above code
+% All lines should be identical
+plot(-cumsum([0;dailySUM(:,3)]),'b')
+hold on
+plot(-cumsum([0;sum(dailySUM(:,4:6),2)]),'r')
+plot(-cumsum([0;sum(dailySUM(:,7:27),2)]),'g')
+%
+%% Multiply the values by the number of days and average per year
+cnt=1;
+yc=1;
+clear monthlySUM YearlySum
+for ii=7:510
+    ndays = eomday(dailySUM(ii,1), dailySUM(ii,2));
+    monthlySUM(cnt,:) = [dailySUM(ii,1:2) dailySUM(ii,3:end)*ndays];
+    if mod(cnt,12) == 0
+        YearlySum(yc,:) = [dailySUM(ii,1) sum(monthlySUM(cnt-11:cnt,3:end),1)];
+        yc = yc + 1; 
+    end
+    cnt=cnt+1;
+end
+%% Compare the plots
+plot(-cumsum([0;YearlySum(:,2)]),'b')
+hold on
+plot(-cumsum([0;sum(YearlySum(:,3:5),2)]),'r')
+plot(-cumsum([0;sum(YearlySum(:,6:26),2)]),'g')
+%% write the storage time series to a js file
+writeTimeSeries2JS('Jscripts/StorageBasins', 'CVHMMonthly', ones(504,1), monthlySUM(:,2), monthlySUM(:,1), cumsum([0; -monthlySUM(1:end-1,3)]/10^6/1233.48184), false);
+writeTimeSeries2JS('Jscripts/StorageBasins', 'TLBMonthly', ones(504,1), monthlySUM(:,2), monthlySUM(:,1), cumsum([0; -monthlySUM(1:end-1,4)]/10^6/1233.48184), true);
+writeTimeSeries2JS('Jscripts/StorageBasins', 'SJVMonthly', ones(504,1), monthlySUM(:,2), monthlySUM(:,1), cumsum([0; -monthlySUM(1:end-1,5)]/10^6/1233.48184), true);
+writeTimeSeries2JS('Jscripts/StorageBasins', 'SACMonthly', ones(504,1), monthlySUM(:,2), monthlySUM(:,1), cumsum([0; -monthlySUM(1:end-1,6)]/10^6/1233.48184), true);
+%%
+basin_id = 2;
+name_file ={'TLB','SJV','SAC'};
+basin_farm_id  = unique([bud(find([bud.bas_id] == basin_id),1).farm_id])
+isfirst = true;
+for ii = basin_farm_id
+    writeTimeSeries2JS(['Jscripts/StorageFarm' name_file{basin_id+1}], ...
+        [name_file{basin_id+1} 'Farm_' num2str(ii)], ones(504,1), monthlySUM(:,2), monthlySUM(:,1), ...
+        cumsum([0; -monthlySUM(1:end-1,6+ii)]/10^6/1233.48184), ~isfirst);
+    isfirst = false;
+end
+
+    
 %%
 clear temp YearlySum
 cnt=1;
@@ -109,25 +203,7 @@ writeTimeSeries2JS('Jscripts/Storage', 'CVHMYearly', ones(length(STRG_year),1), 
 plot(cumsum([0; -STRG]/10^6/1233.48184),'.-')
 grid on
 grid minor
-%% load the cell shapefile
-% and write the averaged info
-bas = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/BAS_active.shp');
-bas_rc = [[bas.ROW]' [bas.COLUMN_]'];
-bud = rmfield(bas, {'lay1_act','lay2_act','lay3_act','lay45_act','lay6_act','lay7_act','lay8_act','lay9_act','lay10_act',...
-        'strt_hd_01','strt_hd_02','strt_hd_03','strt_hd_04','strt_hd_05','strt_hd_06','strt_hd_07','strt_hd_08','strt_hd_09','strt_hd_10'});
-%% add Subbasins and farm id
-farms = shaperead('/home/giorgk/Documents/UCDAVIS/CVHM_NPSAT/gis_data/FARMS_poly.shp');
-XYmean = zeros(length(bud),2);
-for ii = 1:length(bud)
-   XYmean(ii,:) = [mean(bud(ii,1).X(1:4)) mean(bud(ii,1).Y(1:4))]; 
-end
-for ii = 1:length(farms)
-   id_in = find(inpolygon(XYmean(:,1), XYmean(:,2), farms(ii,1).X, farms(ii,1).Y));
-   for jj = 1:length(id_in)
-       bud(id_in(jj),1).farm_id = farms(ii,1).dwr_sbrgns;
-       bud(id_in(jj),1).bas_id = farms(ii,1).Basins;
-   end
-end
+
 %% Period 1
 istart1 = 199; % Oct 1977
 iend1 = 455; % Feb 1999

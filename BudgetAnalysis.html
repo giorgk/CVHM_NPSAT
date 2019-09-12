@@ -17,6 +17,10 @@
     
 <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 <script type="text/javascript" src="Jscripts/Storage.js"></script>
+<script type="text/javascript" src="Jscripts/StorageBasins.js"></script>
+<script type="text/javascript" src="Jscripts/StorageFarmTLB.js"></script>
+<script type="text/javascript" src="Jscripts/StorageFarmSJV.js"></script>
+<script type="text/javascript" src="Jscripts/StorageFarmSAC.js"></script>
 <script type="text/javascript">
     
 var mydata = [
@@ -33,7 +37,7 @@ window.onload = function () {
         animationEnabled: true,
         zoomEnabled: true,
 		title:{
-			text: "Cumulative Change in Groundwater storage"              
+			text: "Cumulative change in groundwater storage"              
 		},
         axisY:{
             title: "Millions of ACFT",
@@ -84,6 +88,281 @@ window.onload = function () {
 		]
 	});
     chartStorage.render();
+
+    var chartBasinsStorage = new CanvasJS.Chart("chartBasinsStorage", {
+        theme: "light1",
+        animationEnabled: true,
+        zoomEnabled: true,
+        title:{
+			text: "Cumulative change in groundwater storage per Basin"              
+		},
+        axisY:{
+            title: "Millions of ACFT",
+            crosshair: {
+                enabled: true
+            }
+        },
+        axisX:{
+            valueFormatString: "MM YY",
+            title: "Time"
+        },
+        legend:{
+            verticalAlign: "bottom",
+            horizontalAlign: "left",
+            dockInsidePlotArea: true,
+        },
+        data: [
+            {
+                type: "line",
+                showInLegend: true,
+                name: "TLB Monthly",
+                dataPoints: TLBMonthly
+            },
+            {
+                type: "line",
+                showInLegend: true,
+                name: "SJV Monthly",
+                dataPoints: SJVMonthly
+            },
+            {
+                type: "line",
+                showInLegend: true,
+                name: "SAC Monthly",
+                dataPoints: SACMonthly
+            },
+        ]
+    });
+    chartBasinsStorage.render();
+
+    var chartTLBStorage = new CanvasJS.Chart("chartTLBStorage",{
+        theme: "light1",
+        animationEnabled: true,
+        zoomEnabled: true,
+        title:{
+			text: "Cumulative change in groundwater storage per Farm (TLB)"              
+		},
+        axisY:{
+            title: "Millions of ACFT",
+            crosshair: {
+                enabled: true
+            }
+        },
+        axisX:{
+            valueFormatString: "MM YY",
+            title: "Time"
+        },
+        legend:{
+            verticalAlign: "bottom",
+            horizontalAlign: "left",
+            dockInsidePlotArea: true,
+        },
+        data:[
+            {
+                type: "line",
+                color: "#e41a1c",
+                showInLegend: true,
+                name: "Farm 14",
+                dataPoints: TLBFarm_14
+            },
+            {
+                type: "line",
+                color: "#377eb8",
+                showInLegend: true,
+                name: "Farm 15",
+                dataPoints: TLBFarm_15
+            },
+            {
+                type: "line",
+                color: "#4daf4a",
+                showInLegend: true,
+                name: "Farm 16",
+                dataPoints: TLBFarm_16
+            },
+            {
+                type: "line",
+                color: "#984ea3",
+                showInLegend: true,
+                name: "Farm 17",
+                dataPoints: TLBFarm_17
+            },
+            {
+                type: "line",
+                color: "#ff7f00",
+                showInLegend: true,
+                name: "Farm 18",
+                dataPoints: TLBFarm_18
+            },
+            {
+                type: "line",
+                color: "#ffff33",
+                showInLegend: true,
+                name: "Farm 19",
+                dataPoints: TLBFarm_19
+            },
+            {
+                type: "line",
+                color: "#a65628",
+                showInLegend: true,
+                name: "Farm 20",
+                dataPoints: TLBFarm_20
+            },
+            {
+                type: "line",
+                color: "#f781bf",
+                showInLegend: true,
+                name: "Farm 21",
+                dataPoints: TLBFarm_21
+            }
+        ]
+    });
+    chartTLBStorage.render();
+
+    var chartSJVStorage = new CanvasJS.Chart("chartSJVStorage",{
+        theme: "light1",
+        animationEnabled: true,
+        zoomEnabled: true,
+        title:{
+			text: "Cumulative change in groundwater storage per Farm (SJV)"              
+		},
+        axisY:{
+            title: "Millions of ACFT",
+            crosshair: {
+                enabled: true
+            }
+        },
+        axisX:{
+            valueFormatString: "MM YY",
+            title: "Time"
+        },
+        legend:{
+            verticalAlign: "bottom",
+            horizontalAlign: "left",
+            dockInsidePlotArea: true,
+        },
+        data:[
+            {
+                type: "line",
+                color: "#e41a1c",
+                showInLegend: true,
+                name: "Farm 8",
+                dataPoints: SJVFarm_8
+            },
+            {
+                type: "line",
+                color: "#377eb8",
+                showInLegend: true,
+                name: "Farm 9",
+                dataPoints: SJVFarm_9
+            },
+            {
+                type: "line",
+                color: "#4daf4a",
+                showInLegend: true,
+                name: "Farm 10",
+                dataPoints: SJVFarm_10
+            },
+            {
+                type: "line",
+                color: "#984ea3",
+                showInLegend: true,
+                name: "Farm 11",
+                dataPoints: SJVFarm_11
+            },
+            {
+                type: "line",
+                color: "#ff7f00",
+                showInLegend: true,
+                name: "Farm 12",
+                dataPoints: SJVFarm_12
+            },
+            {
+                type: "line",
+                color: "#ffff33",
+                showInLegend: true,
+                name: "Farm 13",
+                dataPoints: SJVFarm_13
+            }
+        ]
+    });
+    chartSJVStorage.render();
+
+    var chartSACStorage = new CanvasJS.Chart("chartSACStorage",{
+        theme: "light1",
+        animationEnabled: true,
+        zoomEnabled: true,
+        title:{
+			text: "Cumulative change in groundwater storage per Farm (SAC)"              
+		},
+        axisY:{
+            title: "Millions of ACFT",
+            crosshair: {
+                enabled: true
+            }
+        },
+        axisX:{
+            valueFormatString: "MM YY",
+            title: "Time"
+        },
+        legend:{
+            verticalAlign: "bottom",
+            horizontalAlign: "left",
+            dockInsidePlotArea: true,
+        },
+        data:[
+            {
+                type: "line",
+                color: "#e41a1c",
+                showInLegend: true,
+                name: "Farm 1",
+                dataPoints: SACFarm_1
+            },
+            {
+                type: "line",
+                color: "#377eb8",
+                showInLegend: true,
+                name: "Farm 2",
+                dataPoints: SACFarm_2
+            },
+            {
+                type: "line",
+                color: "#4daf4a",
+                showInLegend: true,
+                name: "Farm 3",
+                dataPoints: SACFarm_3
+            },
+            {
+                type: "line",
+                color: "#984ea3",
+                showInLegend: true,
+                name: "Farm 4",
+                dataPoints: SACFarm_4
+            },
+            {
+                type: "line",
+                color: "#ff7f00",
+                showInLegend: true,
+                name: "Farm 5",
+                dataPoints: SACFarm_5
+            },
+            {
+                type: "line",
+                color: "#ffff33",
+                showInLegend: true,
+                name: "Farm 6",
+                dataPoints: SACFarm_6
+            },
+            {
+                type: "line",
+                color: "#a65628",
+                showInLegend: true,
+                name: "Farm 7",
+                dataPoints: SACFarm_7
+            }
+        ]
+    });
+    chartSACStorage.render();
+
+    
     
     var chartStreamBud = new CanvasJS.Chart("chartStreamBud", {
         animationEnabled: true,
@@ -137,6 +416,14 @@ window.onload = function () {
     </p>
     
     <div id="chartStorage" style="height: 400px; width: 100%;"></div>
+
+    <div id="chartBasinsStorage" style="height: 400px; width: 100%;"></div>
+
+    <div id="chartTLBStorage" style="height: 400px; width: 100%;"></div>
+
+    <div id="chartSJVStorage" style="height: 400px; width: 100%;"></div>
+
+    <div id="chartSACStorage" style="height: 400px; width: 100%;"></div>
     
     
     <h1>Calculation of Steady state flows</h1>
@@ -151,6 +438,7 @@ window.onload = function () {
         <a href="https://giorgk.users.earthengine.app/view/cvgwbud" target="_blank"><img src="EEGWBUD_512.png" width="30%" height="19%" title="CV GW bud" alt="CVgwbud"></a>
     </p>
     
+    <!--
     <h1>Average Stresses based on CVHM</h1>
     In the previous section we plotted the budget terms by caclulating the negative and positive rates separately over the entire Central Valley. In the following map we show the spatial distribution of average groundwater recharge, stream and pumping.
     
@@ -239,6 +527,7 @@ window.onload = function () {
     <p>
     You can switch between the different budget layers using the layer selector on the top right corner of the map.
     </p>
+-->
     
 </body>
 </html>
