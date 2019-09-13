@@ -18,9 +18,7 @@
 <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 <script type="text/javascript" src="Jscripts/Storage.js"></script>
 <script type="text/javascript" src="Jscripts/StorageBasins.js"></script>
-<script type="text/javascript" src="Jscripts/StorageFarmTLB.js"></script>
-<script type="text/javascript" src="Jscripts/StorageFarmSJV.js"></script>
-<script type="text/javascript" src="Jscripts/StorageFarmSAC.js"></script>
+<script type="text/javascript" src="Jscripts/StorageFarms.js"></script>
 <script type="text/javascript">
     
 var mydata = [
@@ -32,6 +30,8 @@ var mydata = [
 			];
 
 window.onload = function () {
+    var lthick = 3;
+
 	var chartStorage = new CanvasJS.Chart("chartStorage", {
         theme: "light1", // "light1", "light2", "dark1", "dark2"
         animationEnabled: true,
@@ -58,14 +58,16 @@ window.onload = function () {
 		{
 			// Change type to "doughnut", "line", "splineArea", etc.
 			type: "line",
+            lineThickness: lthick,
             showInLegend: true,
             name: "CVHM Monthly",
             markerType: "square",
-			dataPoints: CVHMMonthly
+			dataPoints: cvhmCVMonthly
 		},
         {
 			// Change type to "doughnut", "line", "splineArea", etc.
 			type: "line",
+            lineThickness: lthick,
             showInLegend: true,
             name: "CVHM Yearly",
 			dataPoints: CVHMYearly
@@ -73,6 +75,7 @@ window.onload = function () {
         {
 			// Change type to "doughnut", "line", "splineArea", etc.
 			type: "line",
+            lineThickness: lthick,
             showInLegend: true,
             name: "C2Vsim Monthly",
             markerType: "square",
@@ -81,6 +84,7 @@ window.onload = function () {
         {
 			// Change type to "doughnut", "line", "splineArea", etc.
 			type: "line",
+            lineThickness: lthick,
             showInLegend: true,
             name: "C2Vsim Yearly",
 			dataPoints: C2VsimYearly
@@ -111,24 +115,30 @@ window.onload = function () {
             horizontalAlign: "left",
             dockInsidePlotArea: true,
         },
+        toolTip: {
+            shared: "true"
+        },
         data: [
             {
                 type: "line",
+                lineThickness: lthick,
                 showInLegend: true,
-                name: "TLB Monthly",
-                dataPoints: TLBMonthly
+                name: "TLB",
+                dataPoints: cvhmTLBMonthly
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 showInLegend: true,
-                name: "SJV Monthly",
-                dataPoints: SJVMonthly
+                name: "SJV",
+                dataPoints: cvhmSJVMonthly
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 showInLegend: true,
-                name: "SAC Monthly",
-                dataPoints: SACMonthly
+                name: "SAC",
+                dataPoints: cvhmSACMonthly
             },
         ]
     });
@@ -156,62 +166,73 @@ window.onload = function () {
             horizontalAlign: "left",
             dockInsidePlotArea: true,
         },
+        toolTip: {
+            shared: "true"
+        },
         data:[
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#e41a1c",
                 showInLegend: true,
-                name: "Farm 14",
-                dataPoints: TLBFarm_14
+                name: "Westside",
+                dataPoints: Farm_14
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#377eb8",
                 showInLegend: true,
-                name: "Farm 15",
-                dataPoints: TLBFarm_15
+                name: "Tulare",
+                dataPoints: Farm_15
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#4daf4a",
                 showInLegend: true,
-                name: "Farm 16",
-                dataPoints: TLBFarm_16
+                name: "N Kings",
+                dataPoints: Farm_16
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#984ea3",
                 showInLegend: true,
-                name: "Farm 17",
-                dataPoints: TLBFarm_17
+                name: "S Kings",
+                dataPoints: Farm_17
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#ff7f00",
                 showInLegend: true,
-                name: "Farm 18",
-                dataPoints: TLBFarm_18
+                name: "Kaweah",
+                dataPoints: Farm_18
             },
             {
                 type: "line",
-                color: "#ffff33",
+                lineThickness: lthick,
+                color: "#999999",
                 showInLegend: true,
-                name: "Farm 19",
-                dataPoints: TLBFarm_19
+                name: "W Kern",
+                dataPoints: Farm_19
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#a65628",
                 showInLegend: true,
-                name: "Farm 20",
-                dataPoints: TLBFarm_20
+                name: "NE Kern",
+                dataPoints: Farm_20
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#f781bf",
                 showInLegend: true,
-                name: "Farm 21",
-                dataPoints: TLBFarm_21
+                name: "SE Kern",
+                dataPoints: Farm_21
             }
         ]
     });
@@ -239,48 +260,57 @@ window.onload = function () {
             horizontalAlign: "left",
             dockInsidePlotArea: true,
         },
+        toolTip: {
+            shared: "true"
+        },
         data:[
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#e41a1c",
                 showInLegend: true,
-                name: "Farm 8",
-                dataPoints: SJVFarm_8
+                name: "Cosumnes",
+                dataPoints: Farm_8
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#377eb8",
                 showInLegend: true,
-                name: "Farm 9",
-                dataPoints: SJVFarm_9
+                name: "Delta",
+                dataPoints: Farm_9
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#4daf4a",
                 showInLegend: true,
-                name: "Farm 10",
-                dataPoints: SJVFarm_10
+                name: "Delta-Mendota",
+                dataPoints: Farm_10
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#984ea3",
                 showInLegend: true,
-                name: "Farm 11",
-                dataPoints: SJVFarm_11
+                name: "Modesto",
+                dataPoints: Farm_11
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#ff7f00",
                 showInLegend: true,
-                name: "Farm 12",
-                dataPoints: SJVFarm_12
+                name: "Turlock",
+                dataPoints: Farm_12
             },
             {
                 type: "line",
-                color: "#ffff33",
+                lineThickness: lthick,
+                color: "#999999",
                 showInLegend: true,
-                name: "Farm 13",
-                dataPoints: SJVFarm_13
+                name: "Merced",
+                dataPoints: Farm_13
             }
         ]
     });
@@ -308,55 +338,65 @@ window.onload = function () {
             horizontalAlign: "left",
             dockInsidePlotArea: true,
         },
+        toolTip: {
+            shared: "true"
+        },
         data:[
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#e41a1c",
                 showInLegend: true,
-                name: "Farm 1",
-                dataPoints: SACFarm_1
+                name: "Redding",
+                dataPoints: Farm_1
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#377eb8",
                 showInLegend: true,
-                name: "Farm 2",
-                dataPoints: SACFarm_2
+                name: "Red Bluff",
+                dataPoints: Farm_2
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#4daf4a",
                 showInLegend: true,
-                name: "Farm 3",
-                dataPoints: SACFarm_3
+                name: "Colusa",
+                dataPoints: Farm_3
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#984ea3",
                 showInLegend: true,
-                name: "Farm 4",
-                dataPoints: SACFarm_4
+                name: "Chico",
+                dataPoints: Farm_4
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#ff7f00",
                 showInLegend: true,
-                name: "Farm 5",
-                dataPoints: SACFarm_5
+                name: "Yuba",
+                dataPoints: Farm_5
             },
             {
                 type: "line",
-                color: "#ffff33",
+                lineThickness: lthick,
+                color: "#999999",
                 showInLegend: true,
-                name: "Farm 6",
-                dataPoints: SACFarm_6
+                name: "Cache-Putah",
+                dataPoints: Farm_6
             },
             {
                 type: "line",
+                lineThickness: lthick,
                 color: "#a65628",
                 showInLegend: true,
-                name: "Farm 7",
-                dataPoints: SACFarm_7
+                name: "N American Basin",
+                dataPoints: Farm_7
             }
         ]
     });

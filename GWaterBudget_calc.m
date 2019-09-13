@@ -1,48 +1,176 @@
 % path where the cbc flow data in matlab format are located
 % Claudia's Caped Run
-%
+%{
 %% PATHS
 % D218 path = /home/UCDAVIS/CVHM_NPSAT/ClaudiaRun
 %% Home Linux
 cbcf_path = '/home/giorgk/Documents/UCDAVIS/CVHM_DATA/ClaudiaRun/';
 %% UCDAVIS Linux
-cbcf_path = '/media/giorgk/DATA/giorgk/Documents/CVHM_DATA/ClaudiaRun/';
-%%
+% cbcf_path = '/media/giorgk/DATA/giorgk/Documents/CVHM_DATA/ClaudiaRun/';
+%% Get Cell by cell flow data.
+%{
 m=4;y=1961;
 t2=0;
-for i=1:510
+for ii=1:510
     if m==13
         y
         m=1;y=y+1;
     end
-    cnst=floor((i-1)/10);
-    if t2<cnst*10+1
+    cnst=floor((ii-1)/10);
+    if t2 < cnst*10+1
         clear OUT
         load([cbcf_path 'cbcf_' num2str(cnst*10+1) '_' num2str(10*cnst+10) '.mat']);
-        t2=cnst*10+1;
+        t2 = cnst*10+1;
     end
-    monthlySUM(i,1)=y;
-    monthlySUM(i,2)=m;
-    monthlySUM(i,3)=sum(sum(sum(OUT{i,1}{1,2})));%Storage
-    monthlySUM(i,4)=sum(OUT{i,1}{6,2}(:,4));%Head Dep bounds
-    monthlySUM(i,5)=sum(sum(sum(OUT{i,1}{7,2})));%Inst. IB Storage
-    monthlySUM(i,6)=sum(OUT{i,1}{8,2}(:,4));%Stream Leackage
-    monthlySUM(i,7)=sum(OUT{i,1}{9,2}(:,4));%MNW
-    monthlySUM(i,8)=sum(OUT{i,1}{10,2}(:,4));%Farm wells
-    monthlySUM(i,9)=sum(OUT{i,1}{11,2}(:,2));%Recharge
-    if i == 1
-        STRLK.rc = OUT{i,1}{8,2}(:,1:3);
-        STRLK.data = zeros(size(OUT{i,1}{8,2}(:,1:3),1),510);
-        STRLK.ym = zeros(510,2);
+    CBCdaily.ym(ii,:)=[y m];
+    CBCdaily.STRG{ii,1} = sum(OUT{ii,1}{1,2},3); %Storage (We loose the vertical distribution but not the spatial)
+    CBCdaily.IBST{ii,1} = sum(OUT{ii,1}{7,2},3); %Inst. IB Storage
+    if ii == 1
+        CBCdaily.STRM.IJ = OUT{ii,1}{8,2}(:,1:3);%Stream Leackage
+        CBCdaily.STRM.data = zeros(size(OUT{ii,1}{8,2},1),510);
     end
-    STRLK.data(:,i) = OUT{i,1}{8,2}(:,4);
-    STRLK.ym(i,:) = [y m];
-    RCH.data{i,1} = reshape(OUT{i,1}{11,2}(:,2),98,441)';
-    RCH.ym(i,:) = [y m];
-    WELLS.data{i,1} = OUT{i,1}{9,2};%MNW
-    WELLS.data{i,2} = OUT{i,1}{10,2};%FARM wells
-    WELLS.ym(i,:) = [y m];
+    CBCdaily.STRM.data(:,ii) = OUT{ii,1}{8,2}(:,4);
+    CBCdaily.RCH{ii,1} = reshape(OUT{ii,1}{11,2}(:,2),98,441)';
+    CBCdaily.WELLS.MNW{ii,1} = OUT{ii,1}{9,2};
+    CBCdaily.WELLS.FRM{ii,1} = OUT{ii,1}{10,2};
     m=m+1;
+end
+%}
+%% save cell by cell values
+%save([cbcf_path 'CBCdaily.mat'],'CBCdaily')
+%% load instead of running the above snippets
+load([cbcf_path 'CBCdaily.mat'])
+%% load the cell shapefile
+% keep only the usefull fields
+bas = shaperead(['gis_data' filesep 'BAS_active.shp']);
+bas_rc = [[bas.ROW]' [bas.COLUMN_]'];
+bud = rmfield(bas, {'lay1_act','lay2_act','lay3_act','lay45_act','lay6_act','lay7_act','lay8_act','lay9_act','lay10_act',...
+        'strt_hd_01','strt_hd_02','strt_hd_03','strt_hd_04','strt_hd_05','strt_hd_06','strt_hd_07','strt_hd_08','strt_hd_09','strt_hd_10'});
+%% add Subbasins and farm id
+farms = shaperead(['gis_data' filesep 'FARMS_poly.shp']);
+XYmean = zeros(length(bud),2);
+for ii = 1:length(bud)
+   XYmean(ii,:) = [mean(bud(ii,1).X(1:4)) mean(bud(ii,1).Y(1:4))]; 
+end
+for ii = 1:length(farms)
+   id_in = find(inpolygon(XYmean(:,1), XYmean(:,2), farms(ii,1).X, farms(ii,1).Y));
+   for jj = 1:length(id_in)
+       bud(id_in(jj),1).farm_id = farms(ii,1).dwr_sbrgns;
+       bud(id_in(jj),1).bas_id = farms(ii,1).Basins;
+   end
+end
+%% Calculate monthly regional storage time series
+% CV(1) Basins(2-4) Farms(5-25)
+% To get monthly values we have to multiply the daily values with the number of days per month 
+RR = [bud.ROW]';
+CC = [bud.COLUMN_]';
+B_ID = [bud.bas_id]';
+F_ID = [bud.farm_id]';
+basin_ids = unique(B_ID)';
+farm_ids = unique(F_ID)';
+
+%% preprocess streams and wells so that you have unique rows and columns
+%
+clear str mnw frw
+for ii = 1:510
+    ii
+    % STREAMS
+    rc = CBCdaily.STRM.IJ(:,2:3);
+    str{ii,1} = unique(rc,'rows');
+    str{ii,1} = [str{ii,1} zeros(size(str{ii,1},1),1)];
+    for jj = 1:size(str{ii,1},1)
+        id = find(rc(:,1) == str{ii,1}(jj,1) & rc(:,2) == str{ii,1}(jj,2));
+        str{ii,1}(jj,3) = sum(CBCdaily.STRM.data(id,ii));
+    end
+    
+    % MNW
+    rc = CBCdaily.WELLS.MNW{ii,1}(:,2:3);
+    mnw{ii,1} = unique(rc,'rows');
+    mnw{ii,1} = [mnw{ii,1} zeros(size(mnw{ii,1},1),1)];
+    for jj = 1:size(mnw{ii,1},1)
+        id = find(rc(:,1) == mnw{ii,1}(jj,1) & rc(:,2) == mnw{ii,1}(jj,2));
+        mnw{ii,1}(jj,3) = sum(CBCdaily.WELLS.MNW{ii,1}(id,4));
+    end
+    
+    % FRM
+    rc = CBCdaily.WELLS.FRM{ii,1}(:,2:3);
+    frw{ii,1} = unique(rc,'rows');
+    frw{ii,1} = [frw{ii,1} zeros(size(frw{ii,1},1),1)];
+    for jj = 1:size(frw{ii,1},1)
+        id = find(rc(:,1) == frw{ii,1}(jj,1) & rc(:,2) == frw{ii,1}(jj,2));
+        frw{ii,1}(jj,3) = sum(CBCdaily.WELLS.FRM{ii,1}(id,4));
+    end
+end
+%}
+%%
+clear StorageTimeSeries DiscrepTimeSeries
+StorageTimeSeries = zeros(510, 25);
+% DiscrepTimeSeries contains the water balance that will actually used
+% during averaging and it is calculated as RCH + STRM - Wells. In practice
+% this should be very close to storage
+DiscrepTimeSeries = zeros(510, 25);
+for ii = 1:510
+    ii
+    ndays = eomday(CBCdaily.ym(ii,1), CBCdaily.ym(ii,2));
+    % CV
+    StorageTimeSeries(ii,1) = (sum(sum(CBCdaily.STRG{ii,1}))+sum(sum(CBCdaily.IBST{ii,1})))*ndays;
+    DiscrepTimeSeries(ii,1) = (sum(sum(CBCdaily.RCH{ii,1})) + sum(CBCdaily.STRM.data(:,ii)) + ...
+        sum(CBCdaily.WELLS.MNW{ii,1}(:,4)) + sum(CBCdaily.WELLS.FRM{ii,1}(:,4)))*ndays;
+    
+    % Basins
+    for jj = basin_ids
+        cell_id = find(B_ID == jj);
+        r = RR(cell_id,1);
+        c = CC(cell_id,1);
+        ind = sub2ind([441 98],r,c);
+        StorageTimeSeries(ii,2 +jj) = (sum(CBCdaily.STRG{ii,1}(ind))+sum(CBCdaily.IBST{ii,1}(ind)))*ndays;
+        % find the streams and wells that belong to the basin
+        [~,~,ib_strm] = intersect([r c], str{ii,1}(:,1:2),'rows');
+        [~,~,ib_mnw] = intersect([r c], mnw{ii,1}(:,1:2),'rows');
+        [~,~,ib_frm] = intersect([r c], frw{ii,1}(:,1:2),'rows');
+        
+        DiscrepTimeSeries(ii,2 +jj) = (sum(CBCdaily.RCH{ii,1}(ind)) + sum(str{ii,1}(ib_strm,3)) + ...
+            sum(mnw{ii,1}(ib_mnw,3)) + sum(frw{ii,1}(ib_frm,3)))*ndays;
+    end
+    
+    % Farms
+    for jj = farm_ids
+        cell_id = find(F_ID == jj);
+        r = RR(cell_id,1);
+        c = CC(cell_id,1);
+        ind = sub2ind([441 98],r,c);
+        StorageTimeSeries(ii,4 +jj) = (sum(CBCdaily.STRG{ii,1}(ind))+sum(CBCdaily.IBST{ii,1}(ind)))*ndays;
+        % find the streams and wells that belong to the farm
+        [~,~,ib_strm] = intersect([r c], str{ii,1}(:,1:2),'rows');
+        [~,~,ib_mnw] = intersect([r c], mnw{ii,1}(:,1:2),'rows');
+        [~,~,ib_frm] = intersect([r c], frw{ii,1}(:,1:2),'rows');
+        
+        DiscrepTimeSeries(ii,4 +jj) = (sum(CBCdaily.RCH{ii,1}(ind)) + sum(str{ii,1}(ib_strm,3)) + ...
+            sum(mnw{ii,1}(ib_mnw,3)) + sum(frw{ii,1}(ib_frm,3)))*ndays;
+    end
+end
+%% Do some plots and comparisons
+k = 2;
+clf
+plot(cumsum([0; -StorageTimeSeries(7:end,k)]/10^6/1233.48184),'b')
+hold on
+plot(cumsum([0; DiscrepTimeSeries(7:end,k)]/10^6/1233.48184),'r')
+%% write CV and basins to js files
+writeTimeSeries2JS('Jscripts/StorageBasins', 'cvhmCVMonthly', ones(504,1), CBCdaily.ym(7:end,2), CBCdaily.ym(7:end,1), cumsum([0; -StorageTimeSeries(7:end,1)]/10^6/1233.48184), false);
+writeTimeSeries2JS('Jscripts/StorageBasins', 'cvhmTLBMonthly', ones(504,1), CBCdaily.ym(7:end,2), CBCdaily.ym(7:end,1), cumsum([0; -StorageTimeSeries(7:end,2)]/10^6/1233.48184), true);
+writeTimeSeries2JS('Jscripts/StorageBasins', 'cvhmSJVMonthly', ones(504,1), CBCdaily.ym(7:end,2), CBCdaily.ym(7:end,1), cumsum([0; -StorageTimeSeries(7:end,3)]/10^6/1233.48184), true);
+writeTimeSeries2JS('Jscripts/StorageBasins', 'cvhmSACMonthly', ones(504,1), CBCdaily.ym(7:end,2), CBCdaily.ym(7:end,1), cumsum([0; -StorageTimeSeries(7:end,4)]/10^6/1233.48184), true);
+%% Write Farms 
+append = false;
+for ii = 1:21
+    if ii > 1; append = true;end
+    writeTimeSeries2JS('Jscripts/StorageFarms', ['Farm_' num2str(ii)], ones(504,1), CBCdaily.ym(7:end,2), CBCdaily.ym(7:end,1), cumsum([0; -StorageTimeSeries(7:end,4+ii)]/10^6/1233.48184), append);
+end
+%% Find the time spans periods with minimum storage change
+for sy = 1:510-11
+    for ey = sy+11:510
+        
+    end
 end
 %%
 totDays = 0;
@@ -67,25 +195,7 @@ plot(cumsum(W),'b')
 %% CVHM default run
 % ds218 : /home/UCDAVIS/CVHM_NPSAT
 load('/home/giorgk/Documents/UCDAVIS/CVHM_DATA/CBC.mat');
-%% load the cell shapefile
-% and write the averaged info
-bas = shaperead(['gis_data' filesep 'BAS_active.shp']);
-bas_rc = [[bas.ROW]' [bas.COLUMN_]'];
-bud = rmfield(bas, {'lay1_act','lay2_act','lay3_act','lay45_act','lay6_act','lay7_act','lay8_act','lay9_act','lay10_act',...
-        'strt_hd_01','strt_hd_02','strt_hd_03','strt_hd_04','strt_hd_05','strt_hd_06','strt_hd_07','strt_hd_08','strt_hd_09','strt_hd_10'});
-%% add Subbasins and farm id
-farms = shaperead(['gis_data' filesep 'FARMS_poly.shp']);
-XYmean = zeros(length(bud),2);
-for ii = 1:length(bud)
-   XYmean(ii,:) = [mean(bud(ii,1).X(1:4)) mean(bud(ii,1).Y(1:4))]; 
-end
-for ii = 1:length(farms)
-   id_in = find(inpolygon(XYmean(:,1), XYmean(:,2), farms(ii,1).X, farms(ii,1).Y));
-   for jj = 1:length(id_in)
-       bud(id_in(jj),1).farm_id = farms(ii,1).dwr_sbrgns;
-       bud(id_in(jj),1).bas_id = farms(ii,1).Basins;
-   end
-end
+
 %%
 m=4;y=1961;
 basin_ids = unique([bud.bas_id]')';
