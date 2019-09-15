@@ -19,15 +19,10 @@
 <script type="text/javascript" src="Jscripts/Storage.js"></script>
 <script type="text/javascript" src="Jscripts/StorageBasins.js"></script>
 <script type="text/javascript" src="Jscripts/StorageFarms.js"></script>
+<script type="text/javascript" src="Jscripts/TimeSpanDiscrepancyCV.js"></script>
+<script type="text/javascript" src="Jscripts/TimeSpanDiscrepancyBasins.js"></script>
 <script type="text/javascript">
     
-var mydata = [
-				{ label: "apple",  y: 10  },
-				{ label: "orange", y: 15  },
-				{ label: "banana", y: 25  },
-				{ label: "mango",  y: 30  },
-				{ label: "grape",  y: 28  }
-			];
 
 window.onload = function () {
     var lthick = 3;
@@ -402,6 +397,88 @@ window.onload = function () {
     });
     chartSACStorage.render();
 
+    var chartCVDiscrep = new CanvasJS.Chart("chartCVDiscrep",
+    {
+        animationEnabled: true,
+	    zoomEnabled: true,
+        title:{
+            text: "GW Storage discrepancy per time period. Minimize storage for CV",
+            wrap: true,
+            maxWidth: 550,
+            fontWeight: "bold",
+            fontSize: 25
+        },
+        toolTip:{
+            contentFormatter: function (e) {
+                var content = "";
+                for (var i = 0; i < e.entries.length; i++){
+                    content = CanvasJS.formatDate(e.entries[i].dataPoint.sy, "MM/YY") + "-" +
+                              CanvasJS.formatDate(e.entries[i].dataPoint.ey, "MM/YY") + ": " + e.entries[i].dataPoint.y;       
+                }       
+                return content;
+            },   
+			content: "{sy} - {ey} : {y}"      
+        },
+        axisX:{
+            title: "# of years",
+            titleFontSize: 21
+        },
+        axisY:{
+            title: "Millions of ACFT",
+            titleFontSize: 21
+        },
+        data: [
+            {
+                type: "scatter",
+                markerSize: 4,
+                //markerColor: "blue",
+                dataPoints:  CVdiscrep
+            }
+        ]
+    });
+    chartCVDiscrep.render();
+
+    var chartBasinDiscrep = new CanvasJS.Chart("chartBasinDiscrep",
+    {
+        animationEnabled: true,
+	    zoomEnabled: true,
+        title:{
+            text: "GW Storage discrepancy per time period Minimize storage for each Basin separately",
+            wrap: true,
+            maxWidth: 550,
+            fontWeight: "bold",
+            fontSize: 25
+        },
+        toolTip:{
+            contentFormatter: function (e) {
+                var content = "";
+                for (var i = 0; i < e.entries.length; i++){
+                    content = CanvasJS.formatDate(e.entries[i].dataPoint.sy, "MM/YY") + "-" +
+                              CanvasJS.formatDate(e.entries[i].dataPoint.ey, "MM/YY") + ": " + e.entries[i].dataPoint.y;
+                }       
+                return content;
+            },   
+			content: "{sy} - {ey} : {y}"      
+        },
+        axisX:{
+            title: "# of years",
+            titleFontSize: 21
+        },
+        axisY:{
+            title: "Millions of ACFT",
+            titleFontSize: 21
+        },
+        data: [
+            {
+                type: "scatter",
+                markerSize: 4,
+                //markerColor: "blue",
+                dataPoints:  Basinsdiscrep
+            }
+        ]
+    });
+    chartBasinDiscrep.render();
+
     
     
     var chartStreamBud = new CanvasJS.Chart("chartStreamBud", {
@@ -455,15 +532,20 @@ window.onload = function () {
     
     </p>
     
-    <div id="chartStorage" style="height: 400px; width: 100%;"></div>
+    <div id="chartStorage" style="height: 400px; width: 90%;"></div>
 
-    <div id="chartBasinsStorage" style="height: 400px; width: 100%;"></div>
+    <div id="chartBasinsStorage" style="height: 400px; width: 90%;"></div>
 
-    <div id="chartTLBStorage" style="height: 400px; width: 100%;"></div>
+    <div id="chartTLBStorage" style="height: 400px; width: 90%;"></div>
 
-    <div id="chartSJVStorage" style="height: 400px; width: 100%;"></div>
+    <div id="chartSJVStorage" style="height: 400px; width: 90%;"></div>
 
-    <div id="chartSACStorage" style="height: 400px; width: 100%;"></div>
+    <div id="chartSACStorage" style="height: 400px; width: 90%;"></div>
+
+    <div id="chartCVDiscrep" style="height: 700px; width: 700px;"></div>
+
+    <div id="chartBasinDiscrep" style="height: 700px; width: 700px;"></div>
+    
     
     
     <h1>Calculation of Steady state flows</h1>

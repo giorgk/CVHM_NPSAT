@@ -1,6 +1,6 @@
 % path where the cbc flow data in matlab format are located
 % Claudia's Caped Run
-%{
+%
 %% PATHS
 % D218 path = /home/UCDAVIS/CVHM_NPSAT/ClaudiaRun
 %% Home Linux
@@ -68,9 +68,9 @@ B_ID = [bud.bas_id]';
 F_ID = [bud.farm_id]';
 basin_ids = unique(B_ID)';
 farm_ids = unique(F_ID)';
-
+%}
 %% preprocess streams and wells so that you have unique rows and columns
-%
+%{
 clear str mnw frw
 for ii = 1:510
     ii
@@ -101,8 +101,11 @@ for ii = 1:510
         frw{ii,1}(jj,3) = sum(CBCdaily.WELLS.FRM{ii,1}(id,4));
     end
 end
+%%
+save([cbcf_path 'CBCdaily.mat'],'str','mnw','frw','-append')
 %}
 %%
+%
 clear StorageTimeSeries DiscrepTimeSeries
 StorageTimeSeries = zeros(510, 25);
 % DiscrepTimeSeries contains the water balance that will actually used
@@ -166,12 +169,68 @@ for ii = 1:21
     if ii > 1; append = true;end
     writeTimeSeries2JS('Jscripts/StorageFarms', ['Farm_' num2str(ii)], ones(504,1), CBCdaily.ym(7:end,2), CBCdaily.ym(7:end,1), cumsum([0; -StorageTimeSeries(7:end,4+ii)]/10^6/1233.48184), append);
 end
-%% Find the time spans periods with minimum storage change
-for sy = 1:510-11
-    for ey = sy+11:510
+%}
+%% Find periods with minimum storage change
+Descrepancy = nan(510*510,4);
+Nyears = nan(510*510,1);
+TimeSpan = nan(510*510,2);
+cnt = 1;
+TLB_cells = sub2ind([441 98], RR(B_ID == 0,1), CC(B_ID == 0,1));
+SJV_cells = sub2ind([441 98], RR(B_ID == 1,1), CC(B_ID == 1,1));
+SAC_cells = sub2ind([441 98], RR(B_ID == 2,1), CC(B_ID == 2,1));
+
+for sy = 7:1:510-11
+    sy
+    for ey = sy+11:1:510
+        temp_rch = zeros(441,98);
+        temp_well = zeros(441,98);
+        temp_strm = zeros(441,98);
         
+        for k = sy:ey
+            ndays =eomday(CBCdaily.ym(k,1), CBCdaily.ym(k,2));
+            % recharge
+            temp_rch = temp_rch + CBCdaily.RCH{k,1}*ndays;
+            % streams
+            ind_str = sub2ind([441 98],str{1,1}(:,1), str{1,1}(:,2));
+            temp_strm(ind_str) = temp_strm(ind_str) + str{1,1}(:,3)*ndays;
+            % MN wells
+            ind_wll = sub2ind([441 98],mnw{1,1}(:,1), mnw{1,1}(:,2));
+            temp_well(ind_wll) = temp_well(ind_wll) + mnw{1,1}(:,3)*ndays;
+            % Farm wells
+            ind_wll = sub2ind([441 98],frw{1,1}(:,1), frw{1,1}(:,2));
+            temp_well(ind_wll) = temp_well(ind_wll) + frw{1,1}(:,3)*ndays;
+        end
+        Descrepancy(cnt , 1) = (sum(sum(temp_rch)) + sum(sum(temp_strm)) + sum(sum(temp_well)))/10^6/1233.48184;
+        Descrepancy(cnt , 2) = (sum(sum(temp_rch(TLB_cells))) + sum(sum(temp_strm(TLB_cells))) + sum(sum(temp_well(TLB_cells))))/10^6/1233.48184;
+        Descrepancy(cnt , 3) = (sum(sum(temp_rch(SJV_cells))) + sum(sum(temp_strm(SJV_cells))) + sum(sum(temp_well(SJV_cells))))/10^6/1233.48184;
+        Descrepancy(cnt , 4) = (sum(sum(temp_rch(SAC_cells))) + sum(sum(temp_strm(SAC_cells))) + sum(sum(temp_well(SAC_cells))))/10^6/1233.48184;
+        Nyears(cnt,1) = length(sy:ey)/12;
+        TimeSpan(cnt,:) = [sy ey];
+        cnt = cnt + 1;
     end
 end
+Descrepancy(cnt:end,:) = [];
+Nyears(cnt:end,:) = [];
+TimeSpan(cnt:end,:) = [];
+%% isolate selected periods e.g. the last decade
+ind_sy = 391;
+temp_inds = TimeSpan(:,1) >= ind_sy;
+temp_ts = TimeSpan(temp_inds,:);
+temp_Ny = Nyears(temp_inds,:);
+temp_dp = Descrepancy(temp_inds,:);
+%% find out the time spans for the
+plot(temp_Ny, abs(temp_dp(:,1)),'.')
+plot(temp_Ny, sum(abs(temp_dp(:,2:4)),2),'.')
+%% write the selected points as javascript variable for scatter plot
+nmfile = 'Jscripts/TimeSpanDiscrepancyBasins';
+varname = 'Basinsdiscrep';
+fid = fopen([nmfile '.js'],'w');
+fprintf(fid, 'var %s = [\n', varname);
+for ii = 1:length(temp_Ny)
+    fprintf(fid, '{ x: %0.5f, y: %0.5f, sy: new Date(%d,%d,%d), ey: new Date(%d,%d,%d) },\n', [temp_Ny(ii) sum(abs(temp_dp(ii,2:4)),2) CBCdaily.ym(temp_ts(ii,1),:) 1 CBCdaily.ym(temp_ts(ii,2),:) 1]);
+end
+fprintf(fid, '];');
+fclose(fid);
 %%
 totDays = 0;
 for ii = 1:510
