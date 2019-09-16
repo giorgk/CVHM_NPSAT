@@ -8,7 +8,7 @@ cbcf_path = '/home/giorgk/Documents/UCDAVIS/CVHM_DATA/ClaudiaRun/';
 %% UCDAVIS Linux
 % cbcf_path = '/media/giorgk/DATA/giorgk/Documents/CVHM_DATA/ClaudiaRun/';
 %% Get Cell by cell flow data.
-%{
+%
 m=4;y=1961;
 t2=0;
 for ii=1:510
@@ -35,7 +35,7 @@ for ii=1:510
     CBCdaily.WELLS.FRM{ii,1} = OUT{ii,1}{10,2};
     m=m+1;
 end
-%}
+%
 %% save cell by cell values
 %save([cbcf_path 'CBCdaily.mat'],'CBCdaily')
 %% load instead of running the above snippets
@@ -70,7 +70,7 @@ basin_ids = unique(B_ID)';
 farm_ids = unique(F_ID)';
 %}
 %% preprocess streams and wells so that you have unique rows and columns
-%{
+%}
 clear str mnw frw
 for ii = 1:510
     ii
@@ -191,14 +191,14 @@ for sy = 7:1:510-11
             % recharge
             temp_rch = temp_rch + CBCdaily.RCH{k,1}*ndays;
             % streams
-            ind_str = sub2ind([441 98],str{1,1}(:,1), str{1,1}(:,2));
-            temp_strm(ind_str) = temp_strm(ind_str) + str{1,1}(:,3)*ndays;
+            ind_str = sub2ind([441 98],str{k,1}(:,1), str{k,1}(:,2));
+            temp_strm(ind_str) = temp_strm(ind_str) + str{k,1}(:,3)*ndays;
             % MN wells
-            ind_wll = sub2ind([441 98],mnw{1,1}(:,1), mnw{1,1}(:,2));
-            temp_well(ind_wll) = temp_well(ind_wll) + mnw{1,1}(:,3)*ndays;
+            ind_wll = sub2ind([441 98],mnw{k,1}(:,1), mnw{k,1}(:,2));
+            temp_well(ind_wll) = temp_well(ind_wll) + mnw{k,1}(:,3)*ndays;
             % Farm wells
-            ind_wll = sub2ind([441 98],frw{1,1}(:,1), frw{1,1}(:,2));
-            temp_well(ind_wll) = temp_well(ind_wll) + frw{1,1}(:,3)*ndays;
+            ind_wll = sub2ind([441 98],frw{k,1}(:,1), frw{k,1}(:,2));
+            temp_well(ind_wll) = temp_well(ind_wll) + frw{k,1}(:,3)*ndays;
         end
         Descrepancy(cnt , 1) = (sum(sum(temp_rch)) + sum(sum(temp_strm)) + sum(sum(temp_well)))/10^6/1233.48184;
         Descrepancy(cnt , 2) = (sum(sum(temp_rch(TLB_cells))) + sum(sum(temp_strm(TLB_cells))) + sum(sum(temp_well(TLB_cells))))/10^6/1233.48184;
@@ -222,6 +222,16 @@ temp_dp = Descrepancy(temp_inds,:);
 plot(temp_Ny, abs(temp_dp(:,1)),'.')
 plot(temp_Ny, sum(abs(temp_dp(:,2:4)),2),'.')
 %% write the selected points as javascript variable for scatter plot
+nmfile = 'Jscripts/TimeSpanDiscrepancyCV'; %'Jscripts/TimeSpanDiscrepancyBasins';
+varname = 'CVdiscrep'; % 'Basinsdiscrep';
+fid = fopen([nmfile '.js'],'w');
+fprintf(fid, 'var %s = [\n', varname);
+for ii = 1:length(temp_Ny)
+    fprintf(fid, '{ x: %0.5f, y: %0.5f, sy: new Date(%d,%d,%d), ey: new Date(%d,%d,%d) },\n', [temp_Ny(ii) abs(temp_dp(ii,1)) CBCdaily.ym(temp_ts(ii,1),:) 1 CBCdaily.ym(temp_ts(ii,2),:) 1]);
+end
+fprintf(fid, '];');
+fclose(fid);
+%%
 nmfile = 'Jscripts/TimeSpanDiscrepancyBasins';
 varname = 'Basinsdiscrep';
 fid = fopen([nmfile '.js'],'w');

@@ -215,7 +215,7 @@ for ii = 1:length(stream_cell_unique)
     for jj = 1:length(id)
         CellFlow(ii) = CellFlow(ii) + STRMS(id(jj),4);
     end
-    
+   
 end
 %% Assign the rate and width to the cell according to the length
 for ii = 1:size(CVHMSTRM,1)

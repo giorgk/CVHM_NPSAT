@@ -11,9 +11,6 @@ PNTS = [];
 for ii = 1:length(Xs{1,1})
     PNTS = [PNTS; Xs{1,1}(ii) Ys{1,1}(ii)];
 end
-
-%% or load this
-load('HeadAnalysisData.mat')
 %% loop through the edges of the bas and set the ij ids for those that 
 % match the outline segments
 LNS_IJ = nan(size(PNTS,1),2);
@@ -44,6 +41,8 @@ for ii = 1:size(mesh,1)
         end
     end
 end
+%% or load this
+load('HeadAnalysisData.mat')
 %% Assign head values and standard deviations
 % For the analysis load the file HEADS.mat
 % This is not included in the repository because the size is about 224 MB
