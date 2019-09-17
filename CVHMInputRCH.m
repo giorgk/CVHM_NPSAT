@@ -1,4 +1,4 @@
-function [sumSTM, sumWLL, totDays, opt] = CVHMInputRCH(startTime, endTime, opt)
+function [sumSTM, sumWLL, sumRCH, totDays, opt] = CVHMInputRCH(startTime, endTime, opt)
 % startTime, endTime are [1x2] matrices [y m]
 
 if ~isfield(opt,'cbcf_path')
@@ -13,6 +13,9 @@ if ~isfield(opt, 'simFolder')
 end
 if ~exist(opt.simFolder,'dir')
     mkdir(opt.simFolder)
+end
+if ~isfield(opt, 'timestring')
+    opt.timestring = [num2str(startTime(1)) 'm' num2str(startTime(2)) '_'  num2str(endTime(1)) 'm' num2str(endTime(2))];
 end
 
 % ======== load Data
@@ -33,7 +36,6 @@ end
 % find indices for startTime and endTime
 istart = find(CBCdaily.ym(:,1) == startTime(1) & CBCdaily.ym(:,2) == startTime(2));
 iend = find(CBCdaily.ym(:,1) == endTime(1) & CBCdaily.ym(:,2) == endTime(2));
-timestring = [num2str(startTime(1)) 'm' num2str(startTime(2)) '_'  num2str(endTime(1)) 'm' num2str(endTime(2))];
 
 % Find the sum of stresses
 sumRCH = zeros(441,98);
@@ -99,5 +101,5 @@ Frch.ExtrapolationMethod = 'nearest';
 buf_val = Frch(buff_pnt(:,1), buff_pnt(:,2));
 xy_rch = [xy_rch; buff_pnt buf_val];
 % write the rch file
-writeScatteredData([opt.simFolder filesep opt.prefix '_' timestring  '_Rch.npsat'], struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), xy_rch);
+writeScatteredData([opt.simFolder filesep opt.prefix '_' opt.timestring  '_Rch.npsat'], struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), xy_rch);
 

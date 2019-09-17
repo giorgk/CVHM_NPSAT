@@ -1,6 +1,5 @@
-function CVHMInputStreamB(startTime, endTime, opt)
+function CVHMInputStreamB(opt)
 
-timestring = [num2str(startTime(1)) 'm' num2str(startTime(2)) '_'  num2str(endTime(1)) 'm' num2str(endTime(2))];
 
 % Read stream polygons from houdini.
 % Run this part after the animation in houdini file "CVHM_HOU.hipnc" has
@@ -11,7 +10,7 @@ clear STRM_POLY
 STRM_POLY(1,1).Q = [];
 STRM_POLY(1,1).Geo = [];
 for ii = 1:53 % check the number of generated files
-    fid = fopen([opt.simFolder filesep 'stream_temp_files/temp_' timestring '_out_' num2str(ii) '.txt'], 'r');
+    fid = fopen([opt.simFolder filesep 'stream_temp_files/temp_' opt.timestring '_out_' num2str(ii) '.txt'], 'r');
     Npoly = textscan(fid,'%d',1);
     for jj = 1:Npoly{1,1}
         C = textscan(fid,'%d %f',1);
@@ -72,7 +71,7 @@ end
 STRM_POLY(dlt_id,:) = [];
 
 % Write the stream file (finally!)
-fid = fopen([opt.simFolder filesep opt.prefix '_' timestring  '_Streams.npsat'],'w');
+fid = fopen([opt.simFolder filesep opt.prefix '_' opt.timestring  '_Streams.npsat'],'w');
 fprintf(fid, '%d\n', size(STRM_POLY,1));
 for ii = 1:size(STRM_POLY,1)
     Np = size(STRM_POLY(ii,1).Geo,1);

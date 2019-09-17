@@ -28,7 +28,6 @@ end
 
 istart = find(CBCdaily.ym(:,1) == startTime(1) & CBCdaily.ym(:,2) == startTime(2));
 iend = find(CBCdaily.ym(:,1) == endTime(1) & CBCdaily.ym(:,2) == endTime(2));
-timestring = [num2str(startTime(1)) 'm' num2str(startTime(2)) '_'  num2str(endTime(1)) 'm' num2str(endTime(2))];
 clear CBCdaily % we dont need this variable here just for the time stamp
 
 % For each time step compute the top most head value
@@ -120,12 +119,12 @@ if ~exist([opt.simFolder filesep 'BC_files'], 'dir')
 end
 
 % write the file using boundary function
-fid = fopen([opt.simFolder filesep opt.prefix '_' timestring  '_BC.npsat'], 'w');
+fid = fopen([opt.simFolder filesep opt.prefix '_' opt.timestring  '_BC.npsat'], 'w');
 fprintf(fid, '%d\n', length(BND_LINES));
 for ii = 1:length(BND_LINES)
-    fprintf(fid, 'EDGETOP 0 BC_files/%s\n', ['bnd' timestring '_h' num2str(opt.std_Htol) '_' num2str(ii) '.npsat']);
+    fprintf(fid, 'EDGETOP 0 BC_files/%s\n', ['bnd' opt.timestring '_h' num2str(opt.std_Htol) '_' num2str(ii) '.npsat']);
     
-    fid1 = fopen([opt.simFolder filesep 'BC_files' filesep 'bnd' timestring '_h' num2str(opt.std_Htol) '_' num2str(ii) '.npsat'], 'w');
+    fid1 = fopen([opt.simFolder filesep 'BC_files' filesep 'bnd' opt.timestring '_h' num2str(opt.std_Htol) '_' num2str(ii) '.npsat'], 'w');
     fprintf(fid1, 'BOUNDARY_LINE\n');
     fprintf(fid1, '%d %d %f\n', [length(BND_LINES{ii,1}) 1 1]); % Npnts Ndata tolerance
     fprintf(fid1, '%f %f %f\n', PNTS(BND_LINES{ii,1},1:3)');
@@ -161,4 +160,4 @@ Ftop.Method = 'nearest';
 Ftop.ExtrapolationMethod = 'nearest';
 buf_val = Ftop(buff_pnt(:,1), buff_pnt(:,2));
 xy_top = [xy_top; buff_pnt buf_val];
-writeScatteredData([opt.simFolder filesep opt.prefix '_' timestring  '_Top.npsat'], struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), xy_top);
+writeScatteredData([opt.simFolder filesep opt.prefix '_' opt.timestring  '_Top.npsat'], struct('PDIM',2,'TYPE','HOR','MODE','SIMPLE'), xy_top);

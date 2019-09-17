@@ -1,4 +1,4 @@
-function CVHMInputWellsInit(avWells, startTime, endTime, opt)
+function Wells_Gen = CVHMgenerateWells(avWells, opt)
 
 if ~isfield(opt, 'LU')
     opt.LU = 'LU_2000';
@@ -7,8 +7,6 @@ end
 if ~isfield(opt, 'do_plot')
     opt.do_plot = false;
 end
-
-timestring = [num2str(startTime(1)) 'm' num2str(startTime(2)) '_'  num2str(endTime(1)) 'm' num2str(endTime(2))];
 
 
 % Find the volume of water that is used for Urban and Ag for each farm
@@ -204,10 +202,14 @@ for ii = 1:length(Farms_poly)
         WX(cnt,1) = xr; WY(cnt,1) = yr;
         if opt.do_plot
             figure(2);plot(xr,yr,'.b')
+            drawnow
             figure(5);plot(Qw,Dw,'.b')
+            drawnow
             figure(6);plot(Dw,Sw,'.b')
+            drawnow
         end
         figure(4);title([num2str(abs(Farms_poly(ii,1).AgPump) - Qag_farm) ' ' num2str(cnt)]);
+        drawnow
         
         Wells_Gen(cnt,1).X = xr;
         Wells_Gen(cnt,1).Y = yr;
@@ -216,7 +218,6 @@ for ii = 1:length(Farms_poly)
         Wells_Gen(cnt,1).SL = 10^Sw;
         Wells_Gen(cnt,1).type = 0;
         cnt = cnt + 1;
-        drawnow
     end
     
     if isempty(find(fpb < 2.6437, 1, 'last'))
@@ -254,10 +255,14 @@ for ii = 1:length(Farms_poly)
         WX(cnt,1) = xr; WY(cnt,1) = yr;
         if opt.do_plot
             figure(3);plot(xr,yr,'.b')
+            drawnow
             figure(5);plot(Qw,Dw,'.b')
+            drawnow
             figure(6);plot(Dw,Sw,'.b')
+            drawnow
         end
         figure(4);title([num2str(abs(Farms_poly(ii,1).UrbanPump) - Qpb_farm) ' ' num2str(cnt)] );
+        drawnow
         Wells_Gen(cnt,1).X = xr;
         Wells_Gen(cnt,1).Y = yr;
         Wells_Gen(cnt,1).Q = 10^Qw*5.451/6;
@@ -265,13 +270,10 @@ for ii = 1:length(Farms_poly)
         Wells_Gen(cnt,1).SL = 10^Sw;
         Wells_Gen(cnt,1).type = 1;
         cnt = cnt + 1;
-        drawnow 
-    end
-    if cnt > 100
-        break;
     end
 end
 
+%{
 WW = [[Wells_Gen.X]' [Wells_Gen.Y]' [Wells_Gen.D]' [Wells_Gen.SL]' [Wells_Gen.Q]'];
 
 topelev = read_Scattered([opt.simFolder filesep opt.prefix '_' timestring  '_Top.npsat'], 2);
@@ -289,3 +291,4 @@ fid = fopen([opt.simFolder filesep opt.prefix '_' timestring  'InitWells.npsat']
 fprintf(fid, '%d\n', size(WW, 1));
 fprintf(fid, '%f %f %f %f -%f\n', [WW(:,1) WW(:,2) WW(:,8) WW(:,9) WW(:,5)]');
 fclose(fid);
+%}

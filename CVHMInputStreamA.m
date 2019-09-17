@@ -1,8 +1,6 @@
-function CVHMInputStreamA(STRMS, startTime, endTime, opt)
+function CVHMInputStreamA(STRMS, opt)
 
 load('CVHMSTRM_Graph.mat', 'CVHMSTRM');
-
-timestring = [num2str(startTime(1)) 'm' num2str(startTime(2)) '_'  num2str(endTime(1)) 'm' num2str(endTime(2))];
 
 % Make a unique list of stream cells and calculate the total river length 
 % per cell
@@ -107,7 +105,7 @@ end
 cnt = 1;
 for ii = 1:size(CVHMSTRM,1)
     for mm = 1:size(CVHMSTRM(ii,1).PATHS,1)
-        fid = fopen([opt.simFolder filesep 'stream_temp_files/temp_' timestring '_in_' num2str(cnt) '.txt'], 'w');
+        fid = fopen([opt.simFolder filesep 'stream_temp_files/temp_' opt.timestring '_in_' num2str(cnt) '.txt'], 'w');
         fprintf(fid, '%d\n', length(CVHMSTRM(ii,1).PATHS{mm, 1}));
         fprintf(fid, '%f %f %f %f %f %f %f %f\n',...
             [CVHMSTRM(ii,1).ND(CVHMSTRM(ii,1).PATHS{mm, 1}',:)/100000 zeros(length(CVHMSTRM(ii,1).PATHS{mm, 1}),1)... % P {x,y,z}
