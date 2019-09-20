@@ -18,8 +18,8 @@ if ~isfield(opt, 'minScreen')
     opt.minScreen = 10;
 end
 
-if ~isfield(opt, 'wellVersion')
-    opt.wellVersion = 1;
+if ~isfield(opt, 'iter')
+    opt.iter = 1;
 end
 
 
@@ -84,7 +84,7 @@ for ii = 1:size(WW,1)
 end
 
 % Print wells to file
-fid = fopen([opt.simFolder filesep opt.prefix '_' opt.timestring  '_Wells_' num2str(opt.wellVersion) '.npsat'],'w');
+fid = fopen([opt.simFolder filesep opt.prefix '_' opt.timestring  '_Wells_iter_' num2str(opt.iter) '.npsat'],'w');
 fprintf(fid, '%d\n', size(WW, 1));
 fprintf(fid, '%f %f %f %f -%f\n', [WW(:,1) WW(:,2) WW(:,8) WW(:,9) WW(:,5)]');
 fclose(fid);

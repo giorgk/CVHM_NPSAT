@@ -47,7 +47,7 @@ subsection B. Geometry  ========================================
     # a----------------------------------
     # Top elevation function must be either a single value
     # or the name of a file
-    set a Top elevation function    = cvhm_1995m7_1999m12_Top_1.npsat
+    set a Top elevation function    = cvhm_1995m7_1999m12_Top_iter_1.npsat
 
     # b----------------------------------
     # Bottom elevation function must be either a single value
@@ -97,7 +97,7 @@ subsection D. Boundary Conditions ==============================
   # a----------------------------------
   # The name file of multiple files separated by ;
   # with the constant head boundary conditions
-  set a Dirichlet file name = cvhm_1995m7_1999m12_BC.npsat
+  set a Dirichlet file name = cvhm_1995m7_1999m12_BC_h1.npsat
 end
 
 
@@ -140,7 +140,7 @@ subsection F. Sources & Sinks ==================================
   # c----------------------------------
   # Well network
   # The name of a file with the well information
-  set c Wells                = cvhm_1995m7_1999m12_Wells_1.npsat
+  set c Wells                = cvhm_1995m7_1999m12_Wells_iter_1.npsat
 end
 
 
@@ -148,7 +148,7 @@ subsection G. Solver parameters ================================
   # a----------------------------------
   # Number of nonlinear iterations for solving the unconfined problem
   # The refinement will occur during the N Max refinements iterations.
-  set a Nonlinear iterations = 1
+  set a Nonlinear iterations = 3
 
   # b----------------------------------
   # Tolerance of solver
@@ -287,7 +287,7 @@ subsection J. Output Parameters ================================
   # a----------------------------------
   # Prefix is a keyword that is used when printing the various
   # output files
-  set a Prefix = cvhm_1995m7_1999m12_
+  set a Prefix = cvhm_1995m7_1999m12_H1_
 
 
   subsection A. Load/Save options =---=---=---=---=---=---=
