@@ -397,6 +397,25 @@ window.onload = function () {
     });
     chartSACStorage.render();
 
+    var newCVdiscrep = [];
+    for (var i = 0; i < CVdiscrep.length; i++){
+        var clr = null;
+        var dt = new Date(2000,10,1)
+        if (CVdiscrep[i].ey.getFullYear() > 2000){
+            clr = "red";
+        }
+        else{
+            clr = "green";
+        }
+        newCVdiscrep.push({
+            x: CVdiscrep[i].x,
+            y: CVdiscrep[i].y,
+            sy:CVdiscrep[i].sy,
+            ey:CVdiscrep[i].ey,
+            color: clr
+        });
+    }
+
     var chartCVDiscrep = new CanvasJS.Chart("chartCVDiscrep",
     {
         animationEnabled: true,
@@ -432,11 +451,30 @@ window.onload = function () {
                 type: "scatter",
                 markerSize: 4,
                 //markerColor: "blue",
-                dataPoints:  CVdiscrep
+                dataPoints:  newCVdiscrep
             }
         ]
     });
     chartCVDiscrep.render();
+
+    var newBasinsdiscrep = [];
+    for (var i = 0; i < Basinsdiscrep.length; i++){
+        var clr = null;
+        var dt = new Date(2000,10,1)
+        if (Basinsdiscrep[i].ey.getFullYear() > 2000){
+            clr = "red";
+        }
+        else{
+            clr = "green";
+        }
+        newBasinsdiscrep.push({
+            x: Basinsdiscrep[i].x,
+            y: Basinsdiscrep[i].y,
+            sy:Basinsdiscrep[i].sy,
+            ey:Basinsdiscrep[i].ey,
+            color: clr
+        });
+    }
 
     var chartBasinDiscrep = new CanvasJS.Chart("chartBasinDiscrep",
     {
@@ -473,7 +511,7 @@ window.onload = function () {
                 type: "scatter",
                 markerSize: 4,
                 //markerColor: "blue",
-                dataPoints:  Basinsdiscrep
+                dataPoints:  newBasinsdiscrep
             }
         ]
     });

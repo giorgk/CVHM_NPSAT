@@ -85,11 +85,11 @@ subsection C. Discretization ===================================
 
   # d----------------------------------
   # The number of initial refinements around the wells
-  set d Well Refinement         = 0
+  set d Well Refinement         = 2
 
   # e----------------------------------
   # The number of initial refinements around the Streams
-  set e Stream Refinement       = 0
+  set e Stream Refinement       = 2
 end
 
 
@@ -97,7 +97,7 @@ subsection D. Boundary Conditions ==============================
   # a----------------------------------
   # The name file of multiple files separated by ;
   # with the constant head boundary conditions
-  set a Dirichlet file name = cvhm_1995m7_1999m12_BC_h1.npsat
+  set a Dirichlet file name = cvhm_1995m7_1999m12_BC_h0.5.npsat
 end
 
 
@@ -287,7 +287,7 @@ subsection J. Output Parameters ================================
   # a----------------------------------
   # Prefix is a keyword that is used when printing the various
   # output files
-  set a Prefix = cvhm_1995m7_1999m12_H1_
+  set a Prefix = cvhm_1995m7_1999m12_H0.5_
 
 
   subsection A. Load/Save options =---=---=---=---=---=---=

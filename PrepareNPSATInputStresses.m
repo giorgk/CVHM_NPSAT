@@ -9,7 +9,7 @@ opt.timestring = [num2str(startTime(1)) 'm' num2str(startTime(2)) '_'  num2str(e
 %opt.cbcf_path = '../CVHM_DATA/ClaudiaRun/';
 opt.cbcf_path = '/media/giorgk/FIONA/UBU_BACKUP/Documents/UCDAVIS/CVHM_DATA/ClaudiaRun/';
 opt.gis_path = 'gis_data/';
-opt.std_Htol = 1;
+opt.std_Htol = 0.5;
 opt.LU = 'LU_2000';
 opt.do_plot = false;
 %% Do NOT run this at once. Just line by line by selecting and pressing F9
@@ -45,7 +45,7 @@ clc
 iter = 2;
 
 % First read the water table
-wtcfile = [opt.simFolder filesep 'output' filesep opt.prefix '_' opt.timestring '_top_000_'];
+wtcfile = [opt.simFolder filesep 'output' filesep opt.prefix '_' opt.timestring '_H' num2str(opt.std_Htol) '_top_002_'];
 WTC = ReadWaterTableCloudPoints(wtcfile,1,true, iter);
 % If there are extreme wtc points fix them here
 WTC_mod = WTC;
