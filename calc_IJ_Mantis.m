@@ -36,7 +36,7 @@ ind = [1:Np]';
 clear pnt_bck;
 Ny = length(opt.Y) - 1;
 for ii = 1:Ny
-    id = find(pnt(:,1) >= opt.Y(ii) &  pnt(:,1) <= opt.Y(ii+1));
+    id = find(pnt(:,2) >= opt.Y(ii) &  pnt(:,2) <= opt.Y(ii+1));
     if ~isempty(id)
         II(ind(id),1) = Ny - ii+1;
         pnt(id,:) = [];

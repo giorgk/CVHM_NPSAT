@@ -40,14 +40,37 @@ S = shaperead([sim_results_dir 'endpntsTA']);
 %% calculate the pixel ij that the points correspond to
 pnt = [[S.X]' [S.Y]'];
 [II, JJ] = calc_IJ_Mantis( pnt );
-%% print to file for server
-DATA = nan(length(S),6); % Eid Sid I J mu std
-for ii = 1:length(S)
-    DATA(ii,:) = [S(ii,1).Eid S(ii,1).Sid II(ii, 1) JJ(ii,1) ...
-        URFparam.mu(S(ii,1).Eid+1, S(ii,1).Sid+1) URFparam.std(S(ii,1).Eid+1, S(ii,1).Sid+1)];
+%% Find out which streamlines end up on rivers
+streams = readStreams([sim_results_dir '../cvhm_1995m7_1999m12_Streams.npsat']);
+Scvhm = shaperead([sim_results_dir 'endpnts']);
+pnt_cvhm = [[Scvhm.X]' [Scvhm.Y]'];
+inRivers = false(size(pnt,1),1);
+for ii = 1:length(streams)
+    if rem(ii,100) == 0
+        display(ii)
+    end
+    id = find(inpolygon(pnt_cvhm(:,1), pnt_cvhm(:,2), streams(ii,1).poly(:,1),streams(ii,1).poly(:,2)));
+    inRivers(id,1) = true;
 end
+%% print to file for server
+DATA = nan(length(S),7); % Eid Sid I J mu std wgh
+for ii = 1:length(S)
+    if inRivers(ii)
+        mu = 0;
+        std = 0;
+    else
+        mu = URFparam.mu(S(ii,1).Eid+1, S(ii,1).Sid+1);
+        std = URFparam.std(S(ii,1).Eid+1, S(ii,1).Sid+1);
+    end
+    DATA(ii,:) = [S(ii,1).Eid+1 S(ii,1).Sid+1 II(ii, 1) JJ(ii,1) ...
+        mu std......
+        URFparam.wgh(S(ii,1).Eid+1, S(ii,1).Sid+1)];
+end
+[ii, jj] = find(isnan(DATA));
+DATA(ii,:) = [];
 fid = fopen([sim_results_dir 'Sim_1995m7_1999m12_URFS.dat'],'w');
-fprintf(fid, '%d %d %d %d %f %f\n', DATA');
+fprintf(fid, '%d CVHM_95_99\n', size(DATA,1));
+fprintf(fid, '%d %d %d %d %f %f %f\n', DATA');
 fclose(fid);
 %% Create a well shapefile to convert it to TA
 % Run this snippet inside the Simulation folder
@@ -62,6 +85,6 @@ shapewrite(S, 'wellShapefile');
 %% Read it 
 S = shaperead('wellShapefileTA');
 fid = fopen('cvhm_1995m7_1999m12_Wells.dat','w');
-fprintf(fid, '%d\n', length(S));
+fprintf(fid, '%d CVHM_95_99\n', length(S));
 fprintf(fid, '%d %f %f\n',[[S.Eid]' [S.X]' [S.Y]']');
 fclose(fid);
