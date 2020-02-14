@@ -1,7 +1,7 @@
 
 % Set time span
-startTime = [1995 7];
-endTime = [1999 12];
+startTime = [1992 10];
+endTime = [2003 9];
 
 opt.prefix = 'cvhm';
 opt.simFolder = ['Sim_' num2str(startTime(1)) 'm' num2str(startTime(2)) '_'  num2str(endTime(1)) 'm' num2str(endTime(2))];

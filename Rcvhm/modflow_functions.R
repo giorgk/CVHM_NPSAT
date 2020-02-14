@@ -1,3 +1,46 @@
+modflow.readArrayBin <- function(filename, endian = "little", intsize = 4){
+  warning("Not debugged")
+  flbn <- file(filename,"rb")
+  out <- vector(mode = "list", length = 0)
+  TimeStepList <- vector(mode = "list", length = 4)
+  k <- 0
+  while(T){
+    k <- k + 1
+    KSTP <- readBin(flbn, what = "int", endian = endian,  size = intsize)
+    if (length(KSTP) == 0){break}
+    TimeStepList[[1]] <- KSTP
+    
+    KPER <- readBin(flbn, what = "int", endian = endian,  size = intsize)
+    if (length(KPER) == 0){break}
+    TimeStepList[[2]] <- KPER
+    
+    PERTIM <- readBin(flbn, what = "numeric", endian = endian, size = 4)
+    TOTIM <- readBin(flbn, what = "numeric", endian = endian, size = 4)
+    
+    MP <- readBin(flbn, what = "int", endian = endian, n=16, size = 1)
+    if (length(TMP) == 0){break}
+    DESC <- intToUtf8(TMP)
+    TimeStepList[[3]] <- DESC
+    
+    NCOL <- readBin(flbn, what = "int", endian = endian,  size = intsize)
+    if (length(NCOL) == 0){break}
+    NROW <- readBin(flbn, what = "int", endian = endian,  size = intsize)
+    if (length(NROW) == 0){break}
+    NLAY <- readBin(flbn, what = "int", endian = endian, size = intsize)
+    if (length(NLAY) == 0){break}
+    print(paste("Reading", DESC, "for time step", KSTP, ', stress period', KPER))
+    
+    tmp_data <- readBin(flbn, what = "numeric", endian = endian, n = NLAY*NCOL*NROW, size = 4)
+    tmp_data <- array(data = tmp_data, dim = c(NCOL, NROW, NLAY))
+    tmp_data <- aperm(tmp_data, c(2,1,3))
+    TimeStepList[[4]] <- tmp_data
+    out <- c(out, list(TimeStepList))
+  }
+  return(out)
+}
+
+
+
 #' modflow.readCBC reads the cell by cell modflow binary file
 #' See more on https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?frequently_asked_questions.htm
 #' expand L and then expand Flow Data
@@ -129,6 +172,87 @@ modflow.gather <- function(data, index){
   for (i in 1:length(data)) {
     out[[i]] <- data[[i]][[index]][[4]]
     
+  }
+  return(out)
+}
+
+modflow.readArrayASCII <- function(filename, nlay, maxchar = 1000){
+  out <- vector(mode = "list", length = 0)
+  info <- vector(mode = "list", length = 0)
+  alllines <- readLines(filename)
+  iline <- 1
+  while(T){
+    for (k in 1:nlay) {
+      # Read the first line
+      t <- substr(alllines[iline], 1, maxchar)
+      iline <- iline + 1
+      
+      t <- strsplit(t, split = " ")
+      t <- t[[1]][which(t[[1]] != "")]
+      if (k == 1){
+        print(paste("reading timestep: ",t[2]))
+      }
+      
+      nrow <- as.numeric(t[7])
+      ncol <- as.numeric(t[6])
+      ilay <- as.numeric(t[8])
+      datalay <- array(data = NA, dim = c(nrow,ncol))
+      
+      if (iline == 2){
+        dataArray <- array(data = NA, dim = c(nrow, ncol, nlay))
+      }
+      datalay[] <- NA
+      for (i in 1:nrow) {
+        col_ind_s <- 1
+        while(T){
+          t <- substr(alllines[iline], 1, maxchar)
+          iline <-  iline + 1
+          t <- strsplit(t, split = " ")
+          t <- as.numeric(t[[1]][which(t[[1]] != "")])
+          col_ind_e <- col_ind_s + length(t)-1
+          datalay[i,col_ind_s:col_ind_e] <- t
+          col_ind_s <- col_ind_e + 1
+          if (col_ind_s > ncol){
+            break
+          }
+        }
+      }
+      dataArray[,,ilay] <- datalay
+    }
+    
+    out <- c(out, list(dataArray))
+    dataArray[] <- NA
+    if (iline > length(alllines)){
+      break
+    }
+  }
+  return(out)
+}
+
+#' modflow.extractTopLayInfo Extracts the information from the top active layer
+#' 
+#'
+#' @param D is the list of 3d arrays
+#' @param inactive is the value that indicates the inacvtive cells
+#' 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+modflow.extractTopLayInfo <- function(D, inactive){
+  out <- vector(mode = "list", length = length(D))
+  datamat <- matrix(data = NA, nrow = dim(D[[1]])[1], ncol = dim(D[[1]])[2])
+  nlay <- dim(D[[1]])[3]
+  
+  for (i in 1:length(D)) {
+    datamat[] <- NA
+    for (k in 1:nlay) {
+      tmp <- D[[i]][,,k]
+      ids <- which(tmp != inactive & is.na(datamat))
+      datamat[ids] <- tmp[ids]
+    }
+    out[[i]] <- datamat
   }
   return(out)
 }
