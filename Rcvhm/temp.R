@@ -1,4 +1,5 @@
 temp <- function(){
+  cvhm_streams <- readOGR(dsn = "../gis_data/", layer = "CVHM_streams")
   streamNames <- unique(cvhm_streams@data$NAME)
   STREAMS <- vector(mode = "list", length = length(streamNames))
   for (i in 1:length(streamNames)) {
@@ -7,6 +8,8 @@ temp <- function(){
     uniqNodes <- array(data = NA, dim = c(0,2))
     # This is the ids of the segment nodes
     segNodeIds <- matrix(data = NA, nrow = 0, ncol = 2)
+    segRC <- matrix(data = NA, nrow = 0, ncol = 2)
+    segCell <- matrix(data = NA, nrow = 0, ncol = 1)
     for (j in 1:length(segids)) {
       for (k in 1:length(cvhm_streams@lines[[segids[j]]]@Lines)) {
         line_seg <- cvhm_streams@lines[[segids[j]]]@Lines[[k]]@coords
@@ -16,7 +19,8 @@ temp <- function(){
           if (dim(uniqNodes)[1] == 0){
             uniqNodes <- rbind(uniqNodes,c(p1))
             uniqNodes <- rbind(uniqNodes,c(p2))
-            segNodeIds <- rbind(segNodeIds, c(1,2))
+            id1 <- 1
+            id2 <- 2
           }
           else{
             id1 <- which(sqrt((uniqNodes[,1] - p1[1])^2 + (uniqNodes[,2] - p1[2])^2) < 0.1)
@@ -29,12 +33,15 @@ temp <- function(){
               uniqNodes <- rbind(uniqNodes,c(p2))
               id2 <- dim(uniqNodes)[1]
             }
-            segNodeIds <- rbind(segNodeIds, c(id1,id2))
           }
+          segNodeIds <- rbind(segNodeIds, c(id1,id2))
+          segRC <- rbind(segRC, c(cvhm_streams$ROW[segids[j]], cvhm_streams$COLUMN_[segids[j]]))
+          segCell <- rbind(segCell, c(cvhm_streams$CELLNUM[segids[j]]))
         }
       }
     }
-    STREAMS[[i]] <- list(NAME = streamNames[i], segids = segids, XY = uniqNodes, ID = segNodeIds)
+    STREAMS[[i]] <- list(NAME = streamNames[i], segids = segids, XY = uniqNodes, 
+                         ID = segNodeIds, RC = segRC, CNUM = segCell)
   }
   
   return(STREAMS)
