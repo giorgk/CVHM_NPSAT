@@ -77,31 +77,6 @@ for (i in 1:length(cvhm_bas_active)) {
   cvarea <- cvarea +  cvhm_bas_active@polygons[[i]]@area
 }
 
-
-# PREPARE Interpolation vertices in 2D ----------
-bas_active <- readOGR(dsn = "../gis_data/", layer = "BAS_active")
-cvhm_mesh_buffer <- readOGR(dsn = "../gis_data/", layer = "CVHM_Mesh_outline_buffer")
-cvhm_mesh_coords <- matrix(data = NA, nrow = length(bas_active), ncol = 4)
-# make a list with the centroids of the cell
-for (i in 1:length(bas_active)) {
-  if (length(bas_active@polygons[[i]]@Polygons) == 1){
-    if (dim(bas_active@polygons[[i]]@Polygons[[1]]@coords)[1] == 5){
-      cvhm_mesh_coords[i,] <-  c(colSums(bas_active@polygons[[i]]@Polygons[[1]]@coords[-5,])/4, bas_active$ROW[i], bas_active$COLUMN_[i])
-    }
-    else{
-      print(paste(i, "doesn't have 5 coords"))
-    }
-  }
-  else{
-    print(paste(i, "doesn't have only 1 polygon"))
-  }
-}
-
-# read the buffer nodes
-buffer_nodes <- cvhm_mesh_buffer@polygons[[1]]@Polygons[[1]]@coords
-save(cvhm_mesh_coords, buffer_nodes, file = "chvm2DinterpNodes.RData")
-
-
 # for the CVHM the function works with the inputs reversed
 # r-> is the column, c-> the row and m-> the number of columns
 myutils.sub2ind(95,2,98)
